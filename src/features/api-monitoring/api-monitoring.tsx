@@ -15,13 +15,18 @@ import {
 } from 'lucide-react';
 import type { ApiEndpoint, TimeRange } from '@/types/api-monitoring';
 
+// Pre-computed region data multipliers to avoid Math.random in render
+const REGION_MULTIPLIERS = [0.95, 1.05, 0.98, 1.02, 0.97, 1.03];
+
 export const ApiMonitoring = () => {
   const { apiMetrics, apiEndpoints } = useAppStore();
   const [timeRange, setTimeRange] = useState<TimeRange>('24h');
+  
+  // Use lazy state initialization to capture timestamp once on mount
+  const [currentTime] = useState(() => Date.now());
 
-  // Filter metrics based on selected time range
-  const getFilteredMetrics = () => {
-    const now = Date.now();
+  // Filter metrics based on selected time range - memoized
+  const filteredMetrics = useMemo(() => {
     const ranges: Record<TimeRange, number> = {
       '1h': 60 * 60 * 1000,
       '24h': 24 * 60 * 60 * 1000,
@@ -29,14 +34,13 @@ export const ApiMonitoring = () => {
       '30d': 30 * 24 * 60 * 60 * 1000
     };
     
-    const cutoff = now - ranges[timeRange];
+    const cutoff = currentTime - ranges[timeRange];
     return apiMetrics.filter(m => new Date(m.timestamp).getTime() > cutoff);
-  };
+  }, [apiMetrics, timeRange, currentTime]);
 
-  const filteredMetrics = getFilteredMetrics();
-  const latestMetrics = filteredMetrics.slice(-12);
+  const latestMetrics = useMemo(() => filteredMetrics.slice(-12), [filteredMetrics]);
   
-  // Calculate dynamic metrics based on time range
+  // Calculate dynamic metrics based on time range - memoized
   const avgMetrics = useMemo(() => {
     const baseLatency = latestMetrics.length > 0 
       ? Math.round(latestMetrics.reduce((acc, m) => acc + m.latencyP50, 0) / latestMetrics.length)
@@ -57,53 +61,136 @@ export const ApiMonitoring = () => {
         : 0,
       availability: timeRange === '1h' ? 99.95 : timeRange === '24h' ? 99.92 : timeRange === '7d' ? 99.85 : 99.78
     };
-  }, [filteredMetrics, latestMetrics, timeRange]);
+  }, [latestMetrics, timeRange]);
 
-  const latencyData = filteredMetrics.map(m => ({
-    timestamp: m.timestamp,
-    P50: m.latencyP50,
-    P95: m.latencyP95,
-    P99: m.latencyP99
-  }));
+  const latencyData = useMemo(() => 
+    filteredMetrics.map(m => ({
+      timestamp: m.timestamp,
+      P50: m.latencyP50,
+      P95: m.latencyP95,
+      P99: m.latencyP99
+    })),
+    [filteredMetrics]
+  );
 
-  // Dynamic region data based on filtered metrics
+  // Dynamic region data based on filtered metrics - memoized with deterministic values
   const regionData = useMemo(() => {
     const baseMultiplier = timeRange === '1h' ? 1 : timeRange === '24h' ? 12 : timeRange === '7d' ? 84 : 360;
+    const baseValues = [35000, 28000, 22000, 18000, 15000, 12000];
     return [
-      { name: 'US East', value: Math.floor(35000 * baseMultiplier * (0.9 + Math.random() * 0.2)) },
-      { name: 'US West', value: Math.floor(28000 * baseMultiplier * (0.9 + Math.random() * 0.2)) },
-      { name: 'EU West', value: Math.floor(22000 * baseMultiplier * (0.9 + Math.random() * 0.2)) },
-      { name: 'EU Central', value: Math.floor(18000 * baseMultiplier * (0.9 + Math.random() * 0.2)) },
-      { name: 'AP South', value: Math.floor(15000 * baseMultiplier * (0.9 + Math.random() * 0.2)) },
-      { name: 'AP Northeast', value: Math.floor(12000 * baseMultiplier * (0.9 + Math.random() * 0.2)) }
+      { name: 'US East', value: Math.floor(baseValues[0] * baseMultiplier * REGION_MULTIPLIERS[0]) },
+      { name: 'US West', value: Math.floor(baseValues[1] * baseMultiplier * REGION_MULTIPLIERS[1]) },
+      { name: 'EU West', value: Math.floor(baseValues[2] * baseMultiplier * REGION_MULTIPLIERS[2]) },
+      { name: 'EU Central', value: Math.floor(baseValues[3] * baseMultiplier * REGION_MULTIPLIERS[3]) },
+      { name: 'AP South', value: Math.floor(baseValues[4] * baseMultiplier * REGION_MULTIPLIERS[4]) },
+      { name: 'AP Northeast', value: Math.floor(baseValues[5] * baseMultiplier * REGION_MULTIPLIERS[5]) }
     ];
   }, [timeRange]);
 
-  // Dynamic error distribution based on time range
+  // Calculate error distribution from actual filtered metrics
   const errorDistribution = useMemo(() => {
-    const baseValues = {
-      success: 94.2,
-      redirect: 3.5,
-      clientError: 1.8,
-      serverError: 0.5
-    };
+    if (filteredMetrics.length === 0) {
+      return [
+        { name: '2xx Success', value: 94.2 },
+        { name: '3xx Redirect', value: 3.5 },
+        { name: '4xx Client Error', value: 1.8 },
+        { name: '5xx Server Error', value: 0.5 }
+      ];
+    }
     
-    // Higher error rates for longer time ranges (simulating historical data)
-    const errorMultiplier = timeRange === '1h' ? 1 : timeRange === '24h' ? 1.2 : timeRange === '7d' ? 1.5 : 1.8;
-    const clientError = Math.min(baseValues.clientError * errorMultiplier, 5);
-    const serverError = Math.min(baseValues.serverError * errorMultiplier, 3);
-    const totalErrors = clientError + serverError + baseValues.redirect;
-    const success = Math.max(100 - totalErrors, 85);
+    const totalRequests = filteredMetrics.reduce((acc, m) => acc + m.throughput, 0);
+    const totalErrors = filteredMetrics.reduce((acc, m) => acc + m.errorCount, 0);
+    const totalSuccess = filteredMetrics.reduce((acc, m) => acc + m.successCount, 0);
+    
+    if (totalRequests === 0) {
+      return [
+        { name: '2xx Success', value: 94.2 },
+        { name: '3xx Redirect', value: 3.5 },
+        { name: '4xx Client Error', value: 1.8 },
+        { name: '5xx Server Error', value: 0.5 }
+      ];
+    }
+    
+    const successRate = (totalSuccess / totalRequests) * 100;
+    const errorRate = (totalErrors / totalRequests) * 100;
+    
+    // Estimate redirect rate (typically 3-5% of total traffic)
+    const redirectRate = Math.min(3.5, 100 - successRate - errorRate);
+    
+    // Split errors between client and server based on error rate patterns
+    // Client errors are typically more common than server errors (4:1 ratio)
+    const clientErrorRate = errorRate * 0.8;
+    const serverErrorRate = errorRate * 0.2;
     
     return [
-      { name: '2xx Success', value: parseFloat(success.toFixed(1)) },
-      { name: '3xx Redirect', value: baseValues.redirect },
-      { name: '4xx Client Error', value: parseFloat(clientError.toFixed(1)) },
-      { name: '5xx Server Error', value: parseFloat(serverError.toFixed(1)) }
+      { name: '2xx Success', value: parseFloat((successRate - redirectRate).toFixed(1)) },
+      { name: '3xx Redirect', value: parseFloat(redirectRate.toFixed(1)) },
+      { name: '4xx Client Error', value: parseFloat(clientErrorRate.toFixed(1)) },
+      { name: '5xx Server Error', value: parseFloat(serverErrorRate.toFixed(1)) }
     ];
-  }, [timeRange]);
+  }, [filteredMetrics]);
 
-  const columns = [
+  // Calculate endpoint statistics from filtered metrics
+  const filteredEndpoints = useMemo(() => {
+    if (filteredMetrics.length === 0) {
+      return apiEndpoints.slice(0, 10);
+    }
+    
+    // Group metrics by region and calculate averages
+    const regionStats = new Map<string, {
+      totalLatency: number;
+      totalP95: number;
+      totalP99: number;
+      totalErrorRate: number;
+      totalRequests: number;
+      count: number;
+    }>();
+    
+    filteredMetrics.forEach(metric => {
+      const existing = regionStats.get(metric.region);
+      if (existing) {
+        existing.totalLatency += metric.latencyP50;
+        existing.totalP95 += metric.latencyP95;
+        existing.totalP99 += metric.latencyP99;
+        existing.totalErrorRate += metric.errorRate;
+        existing.totalRequests += metric.throughput;
+        existing.count += 1;
+      } else {
+        regionStats.set(metric.region, {
+          totalLatency: metric.latencyP50,
+          totalP95: metric.latencyP95,
+          totalP99: metric.latencyP99,
+          totalErrorRate: metric.errorRate,
+          totalRequests: metric.throughput,
+          count: 1
+        });
+      }
+    });
+    
+    // Map static endpoints to use dynamic data based on region
+    return apiEndpoints.slice(0, 10).map((endpoint) => {
+      const regionKey = endpoint.region as string;
+      const stats = regionStats.get(regionKey);
+      
+      if (stats && stats.count > 0) {
+        // Apply time range multipliers to simulate different load patterns
+        const timeMultiplier = timeRange === '1h' ? 1 : timeRange === '24h' ? 12 : timeRange === '7d' ? 84 : 360;
+        
+        return {
+          ...endpoint,
+          avgLatency: Math.round(stats.totalLatency / stats.count),
+          p95Latency: Math.round(stats.totalP95 / stats.count),
+          p99Latency: Math.round(stats.totalP99 / stats.count),
+          errorRate: parseFloat((stats.totalErrorRate / stats.count).toFixed(2)),
+          requestCount: Math.floor(stats.totalRequests * timeMultiplier)
+        };
+      }
+      
+      return endpoint;
+    });
+  }, [filteredMetrics, apiEndpoints, timeRange]);
+
+  const columns = useMemo(() => [
     {
       key: 'path' as const,
       header: 'Endpoint',
@@ -146,7 +233,7 @@ export const ApiMonitoring = () => {
       header: 'Requests',
       render: (value: unknown) => <>{formatNumber(value as number)}</>
     }
-  ];
+  ], []);
 
   return (
     <div className="space-y-6">
@@ -237,7 +324,7 @@ export const ApiMonitoring = () => {
             <CardDescription>Performance by API endpoint</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table data={apiEndpoints.slice(0, 10)} columns={columns} />
+            <Table data={filteredEndpoints} columns={columns} />
           </CardContent>
         </Card>
 

@@ -11,7 +11,6 @@ interface TableColumn<T = any> {
 
 interface TableProps<T> {
   data: T[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: TableColumn<T>[];
   className?: string;
   onRowClick?: (item: T) => void;

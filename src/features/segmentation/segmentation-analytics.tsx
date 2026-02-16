@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { KpiCard, KpiGrid } from '@/components/ui/kpi-card';
 import { Table } from '@/components/tables';
@@ -16,13 +17,34 @@ import {
   ArrowDownRight
 } from 'lucide-react';
 
-export const SegmentationAnalytics = () => {
-  const totalUsers = segmentMetrics.reduce((acc, s) => acc + s.userCount, 0);
-  const totalRevenue = segmentMetrics.reduce((acc, s) => acc + s.revenue, 0);
-  const avgGrowth = segmentMetrics.reduce((acc, s) => acc + s.growthRate, 0) / segmentMetrics.length;
-  const avgRetention = segmentMetrics.reduce((acc, s) => acc + s.retentionRate, 0) / segmentMetrics.length;
+// Pre-computed trend data to avoid Date.now() and Math.random() in render
+const TREND_BASE_VALUES = [180000, 185000, 182000, 188000, 190000, 195000, 192000, 198000, 200000, 205000, 202000, 208000];
 
-  const segmentColumns = [
+export const SegmentationAnalytics = () => {
+  // Use lazy state initialization to capture timestamp once on mount
+  const [currentTime] = useState(() => Date.now());
+  
+  const totalUsers = useMemo(() => 
+    segmentMetrics.reduce((acc, s) => acc + s.userCount, 0),
+    []
+  );
+  
+  const totalRevenue = useMemo(() => 
+    segmentMetrics.reduce((acc, s) => acc + s.revenue, 0),
+    []
+  );
+  
+  const avgGrowth = useMemo(() => 
+    segmentMetrics.length > 0 ? segmentMetrics.reduce((acc, s) => acc + s.growthRate, 0) / segmentMetrics.length : 0,
+    []
+  );
+  
+  const avgRetention = useMemo(() => 
+    segmentMetrics.length > 0 ? segmentMetrics.reduce((acc, s) => acc + s.retentionRate, 0) / segmentMetrics.length : 0,
+    []
+  );
+
+  const segmentColumns = useMemo(() => [
     {
       key: 'segment' as const,
       header: 'Segment',
@@ -81,12 +103,15 @@ export const SegmentationAnalytics = () => {
       header: 'ARPU',
       render: (value: number) => `$${value}`
     }
-  ];
+  ], []);
 
-  const mockTrendData = Array.from({ length: 12 }, (_, i) => ({
-    timestamp: new Date(Date.now() - (11 - i) * 30 * 24 * 60 * 60 * 1000).toISOString(),
-    value: 180000 + Math.random() * 20000 + i * 5000
-  }));
+  // Pre-computed trend data using captured timestamp
+  const mockTrendData = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => ({
+      timestamp: new Date(currentTime - (11 - i) * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      value: TREND_BASE_VALUES[i]
+    }));
+  }, [currentTime]);
 
   return (
     <div className="space-y-6">

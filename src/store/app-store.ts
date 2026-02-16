@@ -16,6 +16,10 @@ import {
   serviceHealth
 } from '@/mock-data';
 
+// Maximum number of metrics to keep in memory
+const MAX_API_METRICS = 50;
+const MAX_ERROR_LOGS = 50;
+
 interface AppState {
   // Auth
   currentUser: User;
@@ -61,7 +65,7 @@ export const useAppStore = create<AppState>()(
       currentUser: initialUser,
       setRole: (role) => set((state) => ({
         currentUser: { ...state.currentUser, role }
-      })),
+      }), false, 'setRole'),
       
       // Pipelines
       pipelines: initialPipelines,
@@ -69,7 +73,7 @@ export const useAppStore = create<AppState>()(
         pipelines: state.pipelines.map(p => 
           p.id === id ? { ...p, status, updatedAt: new Date().toISOString() } : p
         )
-      })),
+      }), false, 'updatePipelineStatus'),
       retryPipeline: (id) => set((state) => ({
         pipelines: state.pipelines.map(p => 
           p.id === id 
@@ -81,14 +85,14 @@ export const useAppStore = create<AppState>()(
               } 
             : p
         )
-      })),
+      }), false, 'retryPipeline'),
       
-      // API Monitoring
-      apiMetrics: initialApiMetrics,
+      // API Monitoring - limit array size to prevent memory bloat
+      apiMetrics: initialApiMetrics.slice(-MAX_API_METRICS),
       apiEndpoints: initialApiEndpoints,
       addApiMetric: (metric) => set((state) => ({
-        apiMetrics: [...state.apiMetrics.slice(1), metric]
-      })),
+        apiMetrics: [...state.apiMetrics.slice(-MAX_API_METRICS + 1), metric]
+      }), false, 'addApiMetric'),
       
       // Freshness
       datasets: initialDatasets,
@@ -105,11 +109,11 @@ export const useAppStore = create<AppState>()(
               } 
             : d
         )
-      })),
+      }), false, 'updateDatasetFreshness'),
       
       // Incidents
       incidents: [...activeIncidents, ...recentIncidents],
-      errorLogs: errorLogs,
+      errorLogs: errorLogs.slice(0, MAX_ERROR_LOGS),
       serviceHealth: serviceHealth,
       updateIncidentStatus: (id, status) => set((state) => ({
         incidents: state.incidents.map(i => 
@@ -124,16 +128,16 @@ export const useAppStore = create<AppState>()(
               } 
             : i
         )
-      })),
+      }), false, 'updateIncidentStatus'),
       addErrorLog: (error) => set((state) => ({
-        errorLogs: [error, ...state.errorLogs.slice(0, 99)]
-      })),
+        errorLogs: [error, ...state.errorLogs.slice(0, MAX_ERROR_LOGS - 1)]
+      }), false, 'addErrorLog'),
       
       // Simulation
       isSimulationActive: true,
       toggleSimulation: () => set((state) => ({ 
         isSimulationActive: !state.isSimulationActive 
-      }))
+      }), false, 'toggleSimulation')
     }),
     { name: 'app-store' }
   )

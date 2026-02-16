@@ -11,11 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SegmentationRouteImport } from './routes/segmentation'
 import { Route as PipelinesRouteImport } from './routes/pipelines'
+import { Route as LandingRouteImport } from './routes/landing'
 import { Route as IncidentsRouteImport } from './routes/incidents'
 import { Route as FreshnessRouteImport } from './routes/freshness'
 import { Route as ApiMonitoringRouteImport } from './routes/api-monitoring'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PipelinesIndexRouteImport } from './routes/pipelines.index'
 import { Route as PipelinesPipelineIdRouteImport } from './routes/pipelines.$pipelineId'
 
 const SegmentationRoute = SegmentationRouteImport.update({
@@ -26,6 +28,11 @@ const SegmentationRoute = SegmentationRouteImport.update({
 const PipelinesRoute = PipelinesRouteImport.update({
   id: '/pipelines',
   path: '/pipelines',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingRoute = LandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IncidentsRoute = IncidentsRouteImport.update({
@@ -53,6 +60,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PipelinesIndexRoute = PipelinesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PipelinesRoute,
+} as any)
 const PipelinesPipelineIdRoute = PipelinesPipelineIdRouteImport.update({
   id: '/$pipelineId',
   path: '/$pipelineId',
@@ -65,9 +77,11 @@ export interface FileRoutesByFullPath {
   '/api-monitoring': typeof ApiMonitoringRoute
   '/freshness': typeof FreshnessRoute
   '/incidents': typeof IncidentsRoute
+  '/landing': typeof LandingRoute
   '/pipelines': typeof PipelinesRouteWithChildren
   '/segmentation': typeof SegmentationRoute
   '/pipelines/$pipelineId': typeof PipelinesPipelineIdRoute
+  '/pipelines/': typeof PipelinesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,9 +89,10 @@ export interface FileRoutesByTo {
   '/api-monitoring': typeof ApiMonitoringRoute
   '/freshness': typeof FreshnessRoute
   '/incidents': typeof IncidentsRoute
-  '/pipelines': typeof PipelinesRouteWithChildren
+  '/landing': typeof LandingRoute
   '/segmentation': typeof SegmentationRoute
   '/pipelines/$pipelineId': typeof PipelinesPipelineIdRoute
+  '/pipelines': typeof PipelinesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,9 +101,11 @@ export interface FileRoutesById {
   '/api-monitoring': typeof ApiMonitoringRoute
   '/freshness': typeof FreshnessRoute
   '/incidents': typeof IncidentsRoute
+  '/landing': typeof LandingRoute
   '/pipelines': typeof PipelinesRouteWithChildren
   '/segmentation': typeof SegmentationRoute
   '/pipelines/$pipelineId': typeof PipelinesPipelineIdRoute
+  '/pipelines/': typeof PipelinesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -98,9 +115,11 @@ export interface FileRouteTypes {
     | '/api-monitoring'
     | '/freshness'
     | '/incidents'
+    | '/landing'
     | '/pipelines'
     | '/segmentation'
     | '/pipelines/$pipelineId'
+    | '/pipelines/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -108,9 +127,10 @@ export interface FileRouteTypes {
     | '/api-monitoring'
     | '/freshness'
     | '/incidents'
-    | '/pipelines'
+    | '/landing'
     | '/segmentation'
     | '/pipelines/$pipelineId'
+    | '/pipelines'
   id:
     | '__root__'
     | '/'
@@ -118,9 +138,11 @@ export interface FileRouteTypes {
     | '/api-monitoring'
     | '/freshness'
     | '/incidents'
+    | '/landing'
     | '/pipelines'
     | '/segmentation'
     | '/pipelines/$pipelineId'
+    | '/pipelines/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -129,6 +151,7 @@ export interface RootRouteChildren {
   ApiMonitoringRoute: typeof ApiMonitoringRoute
   FreshnessRoute: typeof FreshnessRoute
   IncidentsRoute: typeof IncidentsRoute
+  LandingRoute: typeof LandingRoute
   PipelinesRoute: typeof PipelinesRouteWithChildren
   SegmentationRoute: typeof SegmentationRoute
 }
@@ -147,6 +170,13 @@ declare module '@tanstack/react-router' {
       path: '/pipelines'
       fullPath: '/pipelines'
       preLoaderRoute: typeof PipelinesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing': {
+      id: '/landing'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/incidents': {
@@ -184,6 +214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pipelines/': {
+      id: '/pipelines/'
+      path: '/'
+      fullPath: '/pipelines/'
+      preLoaderRoute: typeof PipelinesIndexRouteImport
+      parentRoute: typeof PipelinesRoute
+    }
     '/pipelines/$pipelineId': {
       id: '/pipelines/$pipelineId'
       path: '/$pipelineId'
@@ -196,10 +233,12 @@ declare module '@tanstack/react-router' {
 
 interface PipelinesRouteChildren {
   PipelinesPipelineIdRoute: typeof PipelinesPipelineIdRoute
+  PipelinesIndexRoute: typeof PipelinesIndexRoute
 }
 
 const PipelinesRouteChildren: PipelinesRouteChildren = {
   PipelinesPipelineIdRoute: PipelinesPipelineIdRoute,
+  PipelinesIndexRoute: PipelinesIndexRoute,
 }
 
 const PipelinesRouteWithChildren = PipelinesRoute._addFileChildren(
@@ -212,6 +251,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMonitoringRoute: ApiMonitoringRoute,
   FreshnessRoute: FreshnessRoute,
   IncidentsRoute: IncidentsRoute,
+  LandingRoute: LandingRoute,
   PipelinesRoute: PipelinesRouteWithChildren,
   SegmentationRoute: SegmentationRoute,
 }

@@ -1,13 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { PipelinesList } from '@/features/pipelines/pipelines-list';
-
-interface PipelinesSearch {
-  q?: string;
-}
+import { createFileRoute, Outlet } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/pipelines')({
-  component: PipelinesList,
-  validateSearch: (search: Record<string, unknown>): PipelinesSearch => ({
-    q: search.q as string | undefined,
-  }),
+  component: () => <Outlet />,
 });

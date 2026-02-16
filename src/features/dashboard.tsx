@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,27 +22,44 @@ export const Dashboard = () => {
   const navigate = useNavigate();
   const { pipelines, datasets, incidents, apiMetrics } = useAppStore();
 
-  const activeIncidents = incidents.filter(i => i.status === 'open' || i.status === 'investigating');
-  const latestMetrics = apiMetrics.slice(-12);
+  // Memoize expensive computations
+  const activeIncidents = useMemo(() => 
+    incidents.filter(i => i.status === 'open' || i.status === 'investigating'),
+    [incidents]
+  );
+
+  const latestMetrics = useMemo(() => 
+    apiMetrics.slice(-12),
+    [apiMetrics]
+  );
   
-  const pipelineMetrics = {
+  const pipelineMetrics = useMemo(() => ({
     total: pipelines.length,
     running: pipelines.filter(p => p.status === 'RUNNING').length,
     failed: pipelines.filter(p => p.status === 'FAILED').length,
-    successRate: Math.round((pipelines.filter(p => p.status === 'SUCCESS').length / pipelines.length) * 100)
-  };
+    successRate: pipelines.length > 0 ? Math.round((pipelines.filter(p => p.status === 'SUCCESS').length / pipelines.length) * 100) : 0
+  }), [pipelines]);
 
-  const freshnessMetrics = {
+  const freshnessMetrics = useMemo(() => ({
     total: datasets.length,
     fresh: datasets.filter(d => d.freshnessStatus === 'FRESH').length,
     stale: datasets.filter(d => d.freshnessStatus === 'STALE').length
-  };
+  }), [datasets]);
 
-  const latencyData = latestMetrics.map(m => ({
-    timestamp: m.timestamp,
-    P50: m.latencyP50,
-    P95: m.latencyP95
-  }));
+  const latencyData = useMemo(() => 
+    latestMetrics.map(m => ({
+      timestamp: m.timestamp,
+      P50: m.latencyP50,
+      P95: m.latencyP95
+    })),
+    [latestMetrics]
+  );
+
+  // Memoize recent pipelines to prevent re-filtering on every render
+  const recentPipelines = useMemo(() => 
+    pipelines.slice(0, 5),
+    [pipelines]
+  );
 
   return (
     <div className="space-y-6">
@@ -154,7 +172,7 @@ export const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {pipelines.slice(0, 5).map(pipeline => (
+              {recentPipelines.map(pipeline => (
                 <div key={pipeline.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
@@ -192,13 +210,13 @@ export const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Datasets on Schedule</span>
                 <span className="text-2xl font-bold text-green-500">
-                  {Math.round((freshnessMetrics.fresh / freshnessMetrics.total) * 100)}%
+                  {freshnessMetrics.total > 0 ? Math.round((freshnessMetrics.fresh / freshnessMetrics.total) * 100) : 0}%
                 </span>
               </div>
               <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-green-500 rounded-full"
-                  style={{ width: `${(freshnessMetrics.fresh / freshnessMetrics.total) * 100}%` }}
+                  style={{ width: `${freshnessMetrics.total > 0 ? (freshnessMetrics.fresh / freshnessMetrics.total) * 100 : 0}%` }}
                 />
               </div>
               

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -22,26 +22,26 @@ export const PipelineDetail = () => {
   const { pipelineId } = useParams({ from: '/pipelines/$pipelineId' });
   const navigate = useNavigate();
   const { pipelines, currentUser, retryPipeline } = useAppStore();
-  const [isLoading, setIsLoading] = useState(true);
   
   // Find the pipeline - this will update when pipelineId changes
   const pipeline = pipelines.find(p => p.id === pipelineId);
   
-  // Simulate loading state when pipelineId changes
-  useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 100);
-    return () => clearTimeout(timer);
-  }, [pipelineId]);
+  // Use lazy state initialization to capture timestamp once on mount
+  const [currentTime] = useState(() => Date.now());
   
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  // Generate deterministic mock data based on pipeline ID - memoized to prevent regeneration
+  // Must be called before any early returns to follow rules of hooks
+  const pipelineIdForMemo = pipeline?.id;
+  const mockHistoryData = useMemo(() => {
+    if (!pipelineIdForMemo) return [];
+    const baseValue = pipelineIdForMemo.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return Array.from({ length: 24 }, (_, i) => ({
+      timestamp: new Date(currentTime - (23 - i) * 3600000).toISOString(),
+      value: Math.floor(100000 + (baseValue * 1000) + (i % 5) * 5000 + i * 2000)
+    }));
+  }, [pipelineIdForMemo, currentTime]);
   
+  // Show loading state while pipeline is not yet available
   if (!pipeline) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -61,17 +61,6 @@ export const PipelineDetail = () => {
       </div>
     );
   }
-
-  // Generate deterministic mock data based on pipeline ID
-  const generateMockData = () => {
-    const baseValue = pipeline.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return Array.from({ length: 24 }, (_, i) => ({
-      timestamp: new Date(Date.now() - (23 - i) * 3600000).toISOString(),
-      value: Math.floor(100000 + (baseValue * 1000) + Math.random() * 50000 + i * 2000)
-    }));
-  };
-
-  const mockHistoryData = generateMockData();
 
   return (
     <div className="space-y-6">

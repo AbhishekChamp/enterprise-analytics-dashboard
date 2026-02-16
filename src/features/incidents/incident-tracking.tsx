@@ -213,7 +213,7 @@ export const IncidentTracking = () => {
             <CardDescription>Errors by type</CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
-            <PieChartComponent data={errorDistribution} height={280} />
+            <PieChartComponent data={errorDistribution} height={350} />
           </CardContent>
         </Card>
       </div>

@@ -8,10 +8,18 @@ import type { Region } from '@/types/api-monitoring';
 const errorTypes: ErrorType[] = ['runtime', 'timeout', 'database', 'network', 'auth', 'validation'];
 const regions: Region[] = ['us-east', 'us-west', 'eu-west', 'eu-central', 'ap-south', 'ap-northeast'];
 
+// Constants for simulation intervals (in ms)
+const SIMULATION_INTERVALS = {
+  PIPELINE: 30000,      // Increased from 8000 - 30 seconds
+  FRESHNESS: 45000,     // Increased from 12000 - 45 seconds
+  INCIDENT: 60000,      // Increased from 20000 - 60 seconds
+  ERROR: 30000,         // Increased from 15000 - 30 seconds
+  API_METRICS: 20000    // Increased from 10000 - 20 seconds
+};
+
 export const useSimulation = () => {
   const { 
     isSimulationActive, 
-    pipelines,
     updatePipelineStatus, 
     retryPipeline,
     updateDatasetFreshness,
@@ -21,16 +29,47 @@ export const useSimulation = () => {
   } = useAppStore();
   
   const intervalsRef = useRef<ReturnType<typeof setInterval>[]>([]);
+  const isRunningRef = useRef(false);
+
+  // Stable callbacks using refs to avoid re-subscription
+  const callbacksRef = useRef({
+    updatePipelineStatus,
+    retryPipeline,
+    updateDatasetFreshness,
+    updateIncidentStatus,
+    addErrorLog,
+    addApiMetric
+  });
+
+  // Update callbacks ref when they change
+  useEffect(() => {
+    callbacksRef.current = {
+      updatePipelineStatus,
+      retryPipeline,
+      updateDatasetFreshness,
+      updateIncidentStatus,
+      addErrorLog,
+      addApiMetric
+    };
+  }, [updatePipelineStatus, retryPipeline, updateDatasetFreshness, updateIncidentStatus, addErrorLog, addApiMetric]);
 
   useEffect(() => {
-    if (!isSimulationActive) {
+    // Clear existing intervals if simulation is disabled or already running
+    if (!isSimulationActive || isRunningRef.current) {
       intervalsRef.current.forEach(clearInterval);
       intervalsRef.current = [];
+      isRunningRef.current = false;
       return;
     }
 
-    // Pipeline simulation
+    isRunningRef.current = true;
+
+    // Pipeline simulation - batch updates
     const pipelineInterval = setInterval(() => {
+      const state = useAppStore.getState();
+      const pipelines = state.pipelines;
+      if (pipelines.length === 0) return;
+      
       const randomPipeline = pipelines[Math.floor(Math.random() * pipelines.length)];
       if (!randomPipeline) return;
       
@@ -46,17 +85,20 @@ export const useSimulation = () => {
       }
       
       if (newStatus !== randomPipeline.status) {
-        updatePipelineStatus(randomPipeline.id, newStatus);
+        callbacksRef.current.updatePipelineStatus(randomPipeline.id, newStatus);
         
         if (newStatus === 'RUNNING' && randomPipeline.status === 'FAILED') {
-          retryPipeline(randomPipeline.id);
+          callbacksRef.current.retryPipeline(randomPipeline.id);
         }
       }
-    }, 8000);
+    }, SIMULATION_INTERVALS.PIPELINE);
 
     // Dataset freshness simulation
     const freshnessInterval = setInterval(() => {
-      const datasets = useAppStore.getState().datasets;
+      const state = useAppStore.getState();
+      const datasets = state.datasets;
+      if (datasets.length === 0) return;
+      
       const randomDataset = datasets[Math.floor(Math.random() * datasets.length)];
       if (!randomDataset) return;
       
@@ -75,28 +117,29 @@ export const useSimulation = () => {
         delayMinutes = 120 + Math.floor(Math.random() * 60);
       }
       
-      updateDatasetFreshness(randomDataset.id, newStatus, delayMinutes);
-    }, 12000);
+      callbacksRef.current.updateDatasetFreshness(randomDataset.id, newStatus, delayMinutes);
+    }, SIMULATION_INTERVALS.FRESHNESS);
 
     // Incident simulation
     const incidentInterval = setInterval(() => {
-      const incidents = useAppStore.getState().incidents;
+      const state = useAppStore.getState();
+      const incidents = state.incidents;
       const activeIncidentsList = incidents.filter((i: Incident) => i.status === 'open' || i.status === 'investigating');
       
       if (activeIncidentsList.length > 0 && Math.random() > 0.7) {
         const randomIncident = activeIncidentsList[Math.floor(Math.random() * activeIncidentsList.length)];
         const newStatus: IncidentStatus = Math.random() > 0.3 ? 'resolved' : 'investigating';
-        updateIncidentStatus(randomIncident.id, newStatus);
+        callbacksRef.current.updateIncidentStatus(randomIncident.id, newStatus);
       }
-    }, 20000);
+    }, SIMULATION_INTERVALS.INCIDENT);
 
-    // Error log simulation
+    // Error log simulation - reduce frequency
     const errorInterval = setInterval(() => {
-      if (Math.random() > 0.8) {
+      if (Math.random() > 0.85) {  // Increased threshold from 0.8 to 0.85
         const errorType = errorTypes[Math.floor(Math.random() * errorTypes.length)];
         const services = ['payment-service', 'user-service', 'inventory-service', 'auth-service'];
         
-        addErrorLog({
+        callbacksRef.current.addErrorLog({
           id: `err-${Date.now()}`,
           timestamp: new Date().toISOString(),
           errorType,
@@ -105,14 +148,14 @@ export const useSimulation = () => {
           resolved: false
         });
       }
-    }, 15000);
+    }, SIMULATION_INTERVALS.ERROR);
 
-    // API metrics simulation
+    // API metrics simulation - limit array size
     const apiInterval = setInterval(() => {
       const region = regions[Math.floor(Math.random() * regions.length)];
       const baseLatency = 50 + Math.random() * 40;
       
-      addApiMetric({
+      callbacksRef.current.addApiMetric({
         timestamp: new Date().toISOString(),
         latencyP50: Math.floor(baseLatency),
         latencyP95: Math.floor(baseLatency * 1.8),
@@ -124,7 +167,7 @@ export const useSimulation = () => {
         region,
         environment: 'production'
       });
-    }, 10000);
+    }, SIMULATION_INTERVALS.API_METRICS);
 
     intervalsRef.current = [
       pipelineInterval,
@@ -136,8 +179,10 @@ export const useSimulation = () => {
 
     return () => {
       intervalsRef.current.forEach(clearInterval);
+      intervalsRef.current = [];
+      isRunningRef.current = false;
     };
-  }, [isSimulationActive, pipelines, updatePipelineStatus, retryPipeline, updateDatasetFreshness, updateIncidentStatus, addErrorLog, addApiMetric]);
+  }, [isSimulationActive]);
 
   return { isSimulationActive };
 };

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,32 +27,43 @@ export const PipelinesList = () => {
   // Handle search query from URL
   const searchQuery = (search as { q?: string }).q?.toLowerCase() || '';
 
-  const filteredPipelines = pipelines.filter(p => {
-    // First apply status filter
-    if (filter !== 'all' && p.status.toLowerCase() !== filter) return false;
-    // Then apply search filter
-    if (searchQuery && !p.name.toLowerCase().includes(searchQuery) && 
-        !p.description.toLowerCase().includes(searchQuery)) return false;
-    return true;
-  });
+  // Memoize filtered pipelines
+  const filteredPipelines = useMemo(() => 
+    pipelines.filter(p => {
+      // First apply status filter
+      if (filter !== 'all' && p.status.toLowerCase() !== filter) return false;
+      // Then apply search filter
+      if (searchQuery && !p.name.toLowerCase().includes(searchQuery) && 
+          !p.description.toLowerCase().includes(searchQuery)) return false;
+      return true;
+    }),
+    [pipelines, filter, searchQuery]
+  );
 
-  const metrics = {
+  // Memoize metrics calculation
+  const metrics = useMemo(() => ({
     total: pipelines.length,
     running: pipelines.filter(p => p.status === 'RUNNING').length,
     failed: pipelines.filter(p => p.status === 'FAILED').length,
     success: pipelines.filter(p => p.status === 'SUCCESS').length,
-    successRate: Math.round((pipelines.filter(p => p.status === 'SUCCESS').length / pipelines.length) * 100),
+    successRate: pipelines.length > 0 ? Math.round((pipelines.filter(p => p.status === 'SUCCESS').length / pipelines.length) * 100) : 0,
     totalRecords: pipelines.reduce((acc, p) => acc + p.recordsProcessed, 0)
-  };
+  }), [pipelines]);
 
-  const handleRowClick = (item: Pipeline) => {
+  const handleRowClick = useCallback((item: Pipeline) => {
     navigate({ 
       to: '/pipelines/$pipelineId', 
       params: { pipelineId: item.id }
     });
-  };
+  }, [navigate]);
 
-  const columns = [
+  const handleRetry = useCallback((e: React.MouseEvent, item: Pipeline) => {
+    e.stopPropagation();
+    retryPipeline(item.id);
+  }, [retryPipeline]);
+
+  // Memoize columns configuration
+  const columns = useMemo(() => [
     {
       key: 'name' as const,
       header: 'Pipeline',
@@ -116,10 +127,7 @@ export const PipelinesList = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                retryPipeline(item.id);
-              }}
+              onClick={(e) => handleRetry(e, item)}
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
@@ -128,7 +136,7 @@ export const PipelinesList = () => {
         </div>
       )
     }
-  ];
+  ], [currentUser.role, handleRetry]);
 
   return (
     <div className="space-y-6">

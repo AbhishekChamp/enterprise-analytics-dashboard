@@ -16,11 +16,13 @@ import {
   Settings,
   Sun,
   Moon,
-  Info
+  LogOut
 } from 'lucide-react';
 import { cn } from '@/utils/formatting';
-import { useTheme } from './theme-provider';
+import { useTheme } from '@/hooks/use-theme';
 import { useAppStore } from '@/store/app-store';
+import { Footer } from './Footer';
+import toast from 'react-hot-toast';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -29,104 +31,123 @@ const navigation = [
   { name: 'Data Freshness', href: '/freshness', icon: Clock },
   { name: 'Segmentation', href: '/segmentation', icon: Users },
   { name: 'Incidents', href: '/incidents', icon: AlertCircle },
-  { name: 'About', href: '/about', icon: Info },
 ];
+
+interface SidebarContentProps {
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
+  currentUser: { role: string };
+  setRole: (role: 'ADMIN' | 'VIEWER') => void;
+  isSimulationActive: boolean;
+  toggleSimulation: () => void;
+  location: { pathname: string };
+  setMobileOpen?: (open: boolean) => void;
+}
+
+const SidebarContent = ({ 
+  collapsed, 
+  setCollapsed, 
+  currentUser, 
+  setRole, 
+  isSimulationActive, 
+  toggleSimulation,
+  location,
+  setMobileOpen 
+}: SidebarContentProps) => (
+  <>
+    <div className="flex h-16 items-center justify-between px-4 border-b border-border">
+      <div className={cn("flex items-center gap-2", collapsed && "justify-center")}>
+        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+          <Activity className="h-5 w-5 text-primary-foreground" />
+        </div>
+        {!collapsed && (
+          <span className="text-lg font-semibold">DataOps</span>
+        )}
+      </div>
+      {!collapsed && (
+        <button
+          onClick={() => setCollapsed(true)}
+          className="hidden lg:flex p-1 rounded-md hover:bg-accent"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+
+    <div className="flex-1 overflow-auto py-4">
+      <nav className="space-y-1 px-2">
+        {navigation.map((item) => {
+          const isActive = location.pathname === item.href;
+          return (
+            <Link
+              key={item.name}
+              to={item.href}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                collapsed && "justify-center px-2"
+              )}
+              onClick={() => setMobileOpen?.(false)}
+            >
+              <item.icon className="h-5 w-5 flex-shrink-0" />
+              {!collapsed && <span>{item.name}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
+
+    {!collapsed && (
+      <div className="border-t border-border p-4 space-y-4">
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">Role</label>
+          <select
+            value={currentUser.role}
+            onChange={(e) => setRole(e.target.value as 'ADMIN' | 'VIEWER')}
+            className="w-full px-2 py-1 text-sm border rounded bg-background"
+          >
+            <option value="ADMIN">Admin</option>
+            <option value="VIEWER">Viewer</option>
+          </select>
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">Simulation</label>
+          <button
+            onClick={toggleSimulation}
+            className={cn(
+              "w-full px-2 py-1 text-sm rounded transition-colors",
+              isSimulationActive 
+                ? "bg-green-500/10 text-green-600 border border-green-500/20" 
+                : "bg-red-500/10 text-red-600 border border-red-500/20"
+            )}
+          >
+            {isSimulationActive ? 'Active' : 'Paused'}
+          </button>
+        </div>
+      </div>
+    )}
+
+    {collapsed && (
+      <div className="border-t border-border p-2">
+        <button
+          onClick={() => setCollapsed(false)}
+          className="w-full flex justify-center p-1 rounded-md hover:bg-accent"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    )}
+  </>
+);
 
 export const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { currentUser, setRole, isSimulationActive, toggleSimulation } = useAppStore();
-
-  const NavContent = () => (
-    <>
-      <div className="flex h-16 items-center justify-between px-4 border-b border-border">
-        <div className={cn("flex items-center gap-2", collapsed && "justify-center")}>
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <Activity className="h-5 w-5 text-primary-foreground" />
-          </div>
-          {!collapsed && (
-            <span className="text-lg font-semibold">DataOps</span>
-          )}
-        </div>
-        {!collapsed && (
-          <button
-            onClick={() => setCollapsed(true)}
-            className="hidden lg:flex p-1 rounded-md hover:bg-accent"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-
-      <div className="flex-1 overflow-auto py-4">
-        <nav className="space-y-1 px-2">
-          {navigation.map((item) => {
-            const isActive = location.pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                  collapsed && "justify-center px-2"
-                )}
-                onClick={() => setMobileOpen(false)}
-              >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
-                {!collapsed && <span>{item.name}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
-
-      {!collapsed && (
-        <div className="border-t border-border p-4 space-y-4">
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">Role</label>
-            <select
-              value={currentUser.role}
-              onChange={(e) => setRole(e.target.value as 'ADMIN' | 'VIEWER')}
-              className="w-full px-2 py-1 text-sm border rounded bg-background"
-            >
-              <option value="ADMIN">Admin</option>
-              <option value="VIEWER">Viewer</option>
-            </select>
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">Simulation</label>
-            <button
-              onClick={toggleSimulation}
-              className={cn(
-                "w-full px-2 py-1 text-sm rounded transition-colors",
-                isSimulationActive 
-                  ? "bg-green-500/10 text-green-600 border border-green-500/20" 
-                  : "bg-red-500/10 text-red-600 border border-red-500/20"
-              )}
-            >
-              {isSimulationActive ? 'Active' : 'Paused'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {collapsed && (
-        <div className="border-t border-border p-2">
-          <button
-            onClick={() => setCollapsed(false)}
-            className="w-full flex justify-center p-1 rounded-md hover:bg-accent"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-    </>
-  );
 
   return (
     <>
@@ -146,7 +167,16 @@ export const Sidebar = () => {
             onClick={() => setMobileOpen(false)}
           />
           <div className="absolute left-0 top-0 h-full w-64 bg-background border-r border-border flex flex-col">
-            <NavContent />
+            <SidebarContent 
+              collapsed={false} 
+              setCollapsed={setCollapsed}
+              currentUser={currentUser}
+              setRole={setRole}
+              isSimulationActive={isSimulationActive}
+              toggleSimulation={toggleSimulation}
+              location={location}
+              setMobileOpen={setMobileOpen}
+            />
           </div>
         </div>
       )}
@@ -158,9 +188,223 @@ export const Sidebar = () => {
           collapsed ? "w-16" : "w-64"
         )}
       >
-        <NavContent />
+        <SidebarContent 
+          collapsed={collapsed} 
+          setCollapsed={setCollapsed}
+          currentUser={currentUser}
+          setRole={setRole}
+          isSimulationActive={isSimulationActive}
+          toggleSimulation={toggleSimulation}
+          location={location}
+        />
       </aside>
     </>
+  );
+};
+
+// Toggle Switch Component
+const ToggleSwitch = ({ 
+  checked, 
+  onChange 
+}: { 
+  checked: boolean; 
+  onChange: () => void 
+}) => (
+  <button
+    onClick={onChange}
+    className={cn(
+      "w-11 h-6 rounded-full relative transition-colors duration-200",
+      checked ? 'bg-primary' : 'bg-muted'
+    )}
+  >
+    <span 
+      className={cn(
+        "absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-200",
+        checked ? 'right-1' : 'left-1'
+      )} 
+    />
+  </button>
+);
+
+// Notification Panel Component
+const NotificationPanel = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const navigate = useNavigate();
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: 'Pipeline Failed', message: 'payment-etl pipeline failed', time: '2 min ago', type: 'error', read: false, link: '/pipelines/pipe-003' },
+    { id: 2, title: 'High Error Rate', message: 'API error rate exceeded threshold', time: '15 min ago', type: 'warning', read: false, link: '/api-monitoring' },
+    { id: 3, title: 'SLA Breach', message: 'Data freshness SLA breached', time: '1 hour ago', type: 'error', read: true, link: '/freshness' },
+  ]);
+
+  const handleNotificationClick = (notification: typeof notifications[0]) => {
+    // Mark as read
+    setNotifications(prev => 
+      prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
+    );
+    // Navigate to the relevant page
+    navigate({ to: notification.link });
+    onClose();
+  };
+
+  const handleViewAll = () => {
+    navigate({ to: '/incidents' });
+    onClose();
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="absolute right-0 top-14 w-80 bg-background border border-border rounded-lg shadow-lg z-50">
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold">Notifications</h3>
+          {unreadCount > 0 && (
+            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+              {unreadCount}
+            </span>
+          )}
+        </div>
+        <button onClick={onClose} className="p-1 hover:bg-accent rounded">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="max-h-96 overflow-y-auto">
+        {notifications.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">
+            <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p>No notifications</p>
+          </div>
+        ) : (
+          notifications.map((notification) => (
+            <div 
+              key={notification.id} 
+              onClick={() => handleNotificationClick(notification)}
+              className={cn(
+                "p-4 border-b border-border hover:bg-accent/50 cursor-pointer transition-colors",
+                !notification.read && "bg-accent/20"
+              )}
+            >
+              <div className="flex items-start gap-3">
+                <div className={cn(
+                  "w-2 h-2 rounded-full mt-2 flex-shrink-0",
+                  notification.type === 'error' ? 'bg-red-500' : 'bg-yellow-500'
+                )} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className={cn(
+                      "font-medium text-sm",
+                      !notification.read && "text-foreground"
+                    )}>
+                      {notification.title}
+                    </p>
+                    {!notification.read && (
+                      <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{notification.message}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+      <div className="p-3 border-t border-border flex items-center justify-between">
+        <button 
+          onClick={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))}
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
+          Mark all as read
+        </button>
+        <button 
+          onClick={handleViewAll}
+          className="text-sm text-primary hover:underline"
+        >
+          View all
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Settings Panel Component
+const SettingsPanel = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const navigate = useNavigate();
+  const [settings, setSettings] = useState({
+    emailNotifications: true,
+    slackIntegration: false,
+    autoRefresh: true,
+  });
+
+  const toggleSetting = (key: keyof typeof settings) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
+  const handleSignOut = () => {
+    toast.success('Signed out successfully');
+    onClose();
+    // Navigate to landing page after a short delay
+    setTimeout(() => {
+      navigate({ to: '/landing' });
+    }, 500);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="absolute right-0 top-14 w-80 bg-background border border-border rounded-lg shadow-lg z-50">
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <h3 className="font-semibold">Settings</h3>
+        <button onClick={onClose} className="p-1 hover:bg-accent rounded">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">Email Notifications</p>
+            <p className="text-xs text-muted-foreground">Receive email alerts</p>
+          </div>
+          <ToggleSwitch 
+            checked={settings.emailNotifications} 
+            onChange={() => toggleSetting('emailNotifications')} 
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">Slack Integration</p>
+            <p className="text-xs text-muted-foreground">Send alerts to Slack</p>
+          </div>
+          <ToggleSwitch 
+            checked={settings.slackIntegration} 
+            onChange={() => toggleSetting('slackIntegration')} 
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">Auto-refresh</p>
+            <p className="text-xs text-muted-foreground">Auto-update dashboard</p>
+          </div>
+          <ToggleSwitch 
+            checked={settings.autoRefresh} 
+            onChange={() => toggleSetting('autoRefresh')} 
+          />
+        </div>
+        <div className="pt-4 border-t border-border space-y-2">
+          <button 
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -169,11 +413,12 @@ export const Header = () => {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Search in pipelines
       navigate({ 
         to: '/pipelines',
         search: { q: searchQuery }
@@ -181,8 +426,18 @@ export const Header = () => {
     }
   };
 
+  const toggleNotifications = () => {
+    setNotificationsOpen(!notificationsOpen);
+    setSettingsOpen(false);
+  };
+
+  const toggleSettings = () => {
+    setSettingsOpen(!settingsOpen);
+    setNotificationsOpen(false);
+  };
+
   return (
-    <header className="h-16 border-b border-border bg-background flex items-center justify-between px-6">
+    <header className="h-16 border-b border-border bg-background flex items-center justify-between px-6 relative">
       <div className="flex items-center gap-4 flex-1">
         <form onSubmit={handleSearch} className="relative max-w-md w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -209,14 +464,26 @@ export const Header = () => {
           )}
         </button>
 
-        <button className="relative p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
-        </button>
+        <div className="relative">
+          <button 
+            onClick={toggleNotifications}
+            className="relative p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent"
+          >
+            <Bell className="h-5 w-5" />
+            <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
+          </button>
+          <NotificationPanel isOpen={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
+        </div>
 
-        <button className="p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent">
-          <Settings className="h-5 w-5" />
-        </button>
+        <div className="relative">
+          <button 
+            onClick={toggleSettings}
+            className="p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
+          <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        </div>
 
         <div className="flex items-center gap-3 pl-4 border-l border-border">
           <div className="text-right">
@@ -243,6 +510,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         <main className="flex-1 overflow-auto p-6">
           {children}
         </main>
+        <Footer />
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { KpiCard, KpiGrid } from '@/components/ui/kpi-card';
@@ -15,16 +16,18 @@ import type { DatasetFreshness } from '@/types/freshness';
 export const FreshnessMonitoring = () => {
   const { datasets } = useAppStore();
 
-  const metrics = {
+  // Memoize metrics calculation
+  const metrics = useMemo(() => ({
     total: datasets.length,
     fresh: datasets.filter(d => d.freshnessStatus === 'FRESH').length,
     delayed: datasets.filter(d => d.freshnessStatus === 'DELAYED').length,
     stale: datasets.filter(d => d.freshnessStatus === 'STALE').length,
     slaBreaches: datasets.filter(d => d.slaBreach).length,
-    complianceRate: Math.round(((datasets.length - datasets.filter(d => d.slaBreach).length) / datasets.length) * 100)
-  };
+    complianceRate: datasets.length > 0 ? Math.round(((datasets.length - datasets.filter(d => d.slaBreach).length) / datasets.length) * 100) : 0
+  }), [datasets]);
 
-  const columns = [
+  // Memoize columns configuration
+  const columns = useMemo(() => [
     {
       key: 'datasetName' as const,
       header: 'Dataset',
@@ -89,7 +92,15 @@ export const FreshnessMonitoring = () => {
       header: 'Owner',
       render: (value: string) => <span className="text-muted-foreground">{value}</span>
     }
-  ];
+  ], []);
+
+  // Memoize delayed datasets
+  const delayedDatasets = useMemo(() => 
+    datasets
+      .filter(d => d.freshnessStatus !== 'FRESH')
+      .slice(0, 5),
+    [datasets]
+  );
 
   return (
     <div className="space-y-6">
@@ -110,7 +121,7 @@ export const FreshnessMonitoring = () => {
         <KpiCard
           title="Fresh Datasets"
           value={metrics.fresh}
-          trend={{ value: metrics.fresh / metrics.total * 100, isPositive: true }}
+          trend={{ value: metrics.total > 0 ? metrics.fresh / metrics.total * 100 : 0, isPositive: true }}
           description="Up to date"
           icon={<CheckCircle className="h-4 w-4 text-green-500" />}
         />
@@ -181,20 +192,17 @@ export const FreshnessMonitoring = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {datasets
-                  .filter(d => d.freshnessStatus !== 'FRESH')
-                  .slice(0, 5)
-                  .map(dataset => (
-                    <div key={dataset.id} className="flex items-center justify-between p-3 rounded-lg border">
-                      <div>
-                        <p className="font-medium text-sm">{dataset.datasetName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Delayed by {dataset.delayMinutes} minutes
-                        </p>
-                      </div>
-                      <StatusBadge status={dataset.freshnessStatus} />
+                {delayedDatasets.map(dataset => (
+                  <div key={dataset.id} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div>
+                      <p className="font-medium text-sm">{dataset.datasetName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Delayed by {dataset.delayMinutes} minutes
+                      </p>
                     </div>
-                  ))}
+                    <StatusBadge status={dataset.freshnessStatus} />
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
