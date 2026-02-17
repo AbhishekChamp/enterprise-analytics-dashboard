@@ -61,3 +61,6 @@ export const Table = <T extends object>({
     </div>
   );
 };
+
+// Export enhanced table
+export { EnhancedTable } from './enhanced-table';

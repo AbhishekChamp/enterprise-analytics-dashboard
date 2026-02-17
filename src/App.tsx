@@ -2,6 +2,8 @@ import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './components/layout/theme-provider';
 import { useSimulation } from './hooks/use-simulation';
+import { ErrorBoundary } from './components/error-boundary';
+import { PerformanceMonitor } from './hooks/use-performance-monitoring.tsx';
 import './app/globals.css';
 
 // Import the generated route tree
@@ -35,13 +37,19 @@ function SimulationWrapper({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Enable performance monitoring in development
+const ENABLE_PERFORMANCE_MONITOR = import.meta.env.DEV;
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <SimulationWrapper>
-          <RouterProvider router={router} />
-        </SimulationWrapper>
+        <ErrorBoundary name="App">
+          <SimulationWrapper>
+            <RouterProvider router={router} />
+            <PerformanceMonitor enabled={ENABLE_PERFORMANCE_MONITOR} />
+          </SimulationWrapper>
+        </ErrorBoundary>
       </ThemeProvider>
     </QueryClientProvider>
   );

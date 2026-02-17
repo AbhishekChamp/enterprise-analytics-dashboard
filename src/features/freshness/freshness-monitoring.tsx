@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { useSearch } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { KpiCard, KpiGrid } from '@/components/ui/kpi-card';
-import { Table } from '@/components/tables';
+import { EnhancedTable as Table } from '@/components/tables/enhanced-table';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { useAppStore } from '@/store/app-store';
 import { 
@@ -15,6 +17,23 @@ import type { DatasetFreshness } from '@/types/freshness';
 
 export const FreshnessMonitoring = () => {
   const { datasets } = useAppStore();
+  const search = useSearch({ from: '/freshness' });
+  
+  // URL state for filters
+  const [filter, setFilter] = useState<'all' | 'fresh' | 'delayed' | 'stale'>('all');
+  
+  // Handle search query from URL
+  const searchQuery = (search as { q?: string }).q?.toLowerCase() || '';
+
+  // Memoize filtered datasets
+  const filteredDatasets = useMemo(() => 
+    datasets.filter(d => {
+      if (filter !== 'all' && d.freshnessStatus.toLowerCase() !== filter) return false;
+      if (searchQuery && !d.datasetName.toLowerCase().includes(searchQuery)) return false;
+      return true;
+    }),
+    [datasets, filter, searchQuery]
+  );
 
   // Memoize metrics calculation
   const metrics = useMemo(() => ({
@@ -143,13 +162,37 @@ export const FreshnessMonitoring = () => {
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Dataset Freshness Status</CardTitle>
-            <CardDescription>
-              Real-time freshness monitoring for all datasets
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Dataset Freshness Status</CardTitle>
+                <CardDescription>
+                  Real-time freshness monitoring for all datasets
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                {(['all', 'fresh', 'delayed', 'stale'] as const).map((f) => (
+                  <Button
+                    key={f}
+                    variant={filter === f ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilter(f)}
+                  >
+                    {f.charAt(0).toUpperCase() + f.slice(1)}
+                  </Button>
+                ))}
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <Table data={datasets} columns={columns} />
+            <Table 
+              data={filteredDatasets} 
+              columns={columns}
+              getRowId={(item) => item.id}
+              enableExport={true}
+              exportFileName="datasets"
+              enablePagination={true}
+              pageSize={10}
+            />
           </CardContent>
         </Card>
 

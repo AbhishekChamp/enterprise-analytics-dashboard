@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -14,9 +14,12 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend
+  Legend,
+  Brush
 } from 'recharts';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { RotateCcw } from 'lucide-react';
 
 interface LineChartProps {
   data: Array<{ timestamp: string; value: number; name?: string }>;
@@ -24,6 +27,7 @@ interface LineChartProps {
   color?: string;
   showArea?: boolean;
   height?: number;
+  enableZoom?: boolean;
 }
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -33,8 +37,11 @@ export const LineChartComponent = memo(({
   yKey = 'value',
   color = '#3b82f6',
   showArea = false,
-  height = 300
+  height = 300,
+  enableZoom = true
 }: LineChartProps) => {
+  const [zoomDomain, setZoomDomain] = useState<{ startIndex?: number; endIndex?: number } | null>(null);
+
   const formattedData = useMemo(() => 
     data.map(item => ({
       ...item,
@@ -43,69 +50,107 @@ export const LineChartComponent = memo(({
     [data]
   );
 
+  const resetZoom = () => setZoomDomain(null);
+
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      {showArea ? (
-        <AreaChart data={formattedData}>
-          <defs>
-            <linearGradient id={`gradient-${color}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.3} />
-              <stop offset="95%" stopColor={color} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis 
-            dataKey="displayTime" 
-            stroke="hsl(var(--muted-foreground))"
-            fontSize={12}
-          />
-          <YAxis 
-            stroke="hsl(var(--muted-foreground))"
-            fontSize={12}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '6px'
-            }}
-          />
-          <Area
-            type="monotone"
-            dataKey={yKey}
-            stroke={color}
-            fill={`url(#gradient-${color})`}
-          />
-        </AreaChart>
-      ) : (
-        <LineChart data={formattedData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis 
-            dataKey="displayTime" 
-            stroke="hsl(var(--muted-foreground))"
-            fontSize={12}
-          />
-          <YAxis 
-            stroke="hsl(var(--muted-foreground))"
-            fontSize={12}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '6px'
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey={yKey}
-            stroke={color}
-            strokeWidth={2}
-            dot={false}
-          />
-        </LineChart>
+    <div className="space-y-2">
+      {enableZoom && zoomDomain && (
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={resetZoom} className="gap-2">
+            <RotateCcw className="h-4 w-4" />
+            Reset Zoom
+          </Button>
+        </div>
       )}
-    </ResponsiveContainer>
+      <ResponsiveContainer width="100%" height={height}>
+        {showArea ? (
+          <AreaChart data={formattedData}>
+            <defs>
+              <linearGradient id={`gradient-${color}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={color} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis 
+              dataKey="displayTime" 
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={12}
+              domain={['auto', 'auto']}
+            />
+            <YAxis 
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={12}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '6px'
+              }}
+            />
+            <Area
+              type="monotone"
+              dataKey={yKey}
+              stroke={color}
+              fill={`url(#gradient-${color})`}
+            />
+            {enableZoom && (
+              <Brush 
+                dataKey="displayTime" 
+                height={30} 
+                stroke={color}
+                onChange={(e) => {
+                  if (e) {
+                    setZoomDomain({ startIndex: e.startIndex, endIndex: e.endIndex });
+                  }
+                }}
+              />
+            )}
+          </AreaChart>
+        ) : (
+          <LineChart data={formattedData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis 
+              dataKey="displayTime" 
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={12}
+              domain={['auto', 'auto']}
+            />
+            <YAxis 
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={12}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '6px'
+              }}
+            />
+            <Line
+              type="monotone"
+              dataKey={yKey}
+              stroke={color}
+              strokeWidth={2}
+              dot={false}
+            />
+            {enableZoom && (
+              <Brush 
+                dataKey="displayTime" 
+                height={30} 
+                stroke={color}
+                onChange={(e) => {
+                  if (e) {
+                    setZoomDomain({ startIndex: e.startIndex, endIndex: e.endIndex });
+                  }
+                }}
+              />
+            )}
+          </LineChart>
+        )}
+      </ResponsiveContainer>
+    </div>
   );
 });
 
@@ -115,36 +160,65 @@ interface BarChartProps {
   data: Array<{ name: string; value: number; [key: string]: string | number }>;
   yKey?: string;
   height?: number;
+  enableZoom?: boolean;
 }
 
 export const BarChartComponent = memo(({
   data,
   yKey = 'value',
-  height = 300
+  height = 300,
+  enableZoom = false
 }: BarChartProps) => {
+  const [zoomDomain, setZoomDomain] = useState<{ startIndex?: number; endIndex?: number } | null>(null);
+
+  const resetZoom = () => setZoomDomain(null);
+
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-        <XAxis 
-          dataKey="name" 
-          stroke="hsl(var(--muted-foreground))"
-          fontSize={12}
-        />
-        <YAxis 
-          stroke="hsl(var(--muted-foreground))"
-          fontSize={12}
-        />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
-            borderRadius: '6px'
-          }}
-        />
-        <Bar dataKey={yKey} fill="#3b82f6" radius={[4, 4, 0, 0]} />
-      </BarChart>
-    </ResponsiveContainer>
+    <div className="space-y-2">
+      {enableZoom && zoomDomain && (
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={resetZoom} className="gap-2">
+            <RotateCcw className="h-4 w-4" />
+            Reset
+          </Button>
+        </div>
+      )}
+      <ResponsiveContainer width="100%" height={height}>
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis 
+            dataKey="name" 
+            stroke="hsl(var(--muted-foreground))"
+            fontSize={12}
+            domain={['auto', 'auto']}
+          />
+          <YAxis 
+            stroke="hsl(var(--muted-foreground))"
+            fontSize={12}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '6px'
+            }}
+          />
+          <Bar dataKey={yKey} fill="#3b82f6" radius={[4, 4, 0, 0]} />
+          {enableZoom && data.length > 10 && (
+            <Brush 
+              dataKey="name" 
+              height={30} 
+              stroke="#3b82f6"
+              onChange={(e) => {
+                if (e) {
+                  setZoomDomain({ startIndex: e.startIndex, endIndex: e.endIndex });
+                }
+              }}
+            />
+          )}
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 });
 
@@ -211,13 +285,17 @@ interface MultiLineChartProps {
   data: Array<{ timestamp: string; [key: string]: number | string }>;
   lines: Array<{ key: string; name: string; color: string }>;
   height?: number;
+  enableZoom?: boolean;
 }
 
 export const MultiLineChartComponent = memo(({
   data,
   lines,
-  height = 300
+  height = 300,
+  enableZoom = true
 }: MultiLineChartProps) => {
+  const [zoomDomain, setZoomDomain] = useState<{ startIndex?: number; endIndex?: number } | null>(null);
+
   const formattedData = useMemo(() => 
     data.map(item => ({
       ...item,
@@ -226,40 +304,65 @@ export const MultiLineChartComponent = memo(({
     [data]
   );
 
+  const resetZoom = () => setZoomDomain(null);
+
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={formattedData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-        <XAxis 
-          dataKey="displayTime" 
-          stroke="hsl(var(--muted-foreground))"
-          fontSize={12}
-        />
-        <YAxis 
-          stroke="hsl(var(--muted-foreground))"
-          fontSize={12}
-        />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
-            borderRadius: '6px'
-          }}
-        />
-        <Legend />
-        {lines.map(line => (
-          <Line
-            key={line.key}
-            type="monotone"
-            dataKey={line.key}
-            name={line.name}
-            stroke={line.color}
-            strokeWidth={2}
-            dot={false}
+    <div className="space-y-2">
+      {enableZoom && zoomDomain && (
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={resetZoom} className="gap-2">
+            <RotateCcw className="h-4 w-4" />
+            Reset Zoom
+          </Button>
+        </div>
+      )}
+      <ResponsiveContainer width="100%" height={height}>
+        <LineChart data={formattedData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis 
+            dataKey="displayTime" 
+            stroke="hsl(var(--muted-foreground))"
+            fontSize={12}
+            domain={['auto', 'auto']}
           />
-        ))}
-      </LineChart>
-    </ResponsiveContainer>
+          <YAxis 
+            stroke="hsl(var(--muted-foreground))"
+            fontSize={12}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '6px'
+            }}
+          />
+          <Legend />
+          {lines.map(line => (
+            <Line
+              key={line.key}
+              type="monotone"
+              dataKey={line.key}
+              name={line.name}
+              stroke={line.color}
+              strokeWidth={2}
+              dot={false}
+            />
+          ))}
+          {enableZoom && (
+            <Brush 
+              dataKey="displayTime" 
+              height={30} 
+              stroke="#3b82f6"
+              onChange={(e) => {
+                if (e) {
+                  setZoomDomain({ startIndex: e.startIndex, endIndex: e.endIndex });
+                }
+              }}
+            />
+          )}
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   );
 });
 

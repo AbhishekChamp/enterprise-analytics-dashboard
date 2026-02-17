@@ -9,7 +9,13 @@ import {
   Shield,
   Users,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Keyboard,
+  Download,
+  Star,
+  TrendingUp,
+  Monitor,
+  Moon
 } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import { PublicLayout } from '@/components/layout/PublicLayout';
@@ -84,7 +90,7 @@ export function AboutPage() {
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Track API latency percentiles (P50, P95, P99), error rates, throughput, and availability. 
-                  Regional breakdown and endpoint-level performance metrics.
+                  Regional breakdown and endpoint-level performance metrics with interactive charts.
                 </p>
               </div>
 
@@ -95,7 +101,7 @@ export function AboutPage() {
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Monitor dataset refresh schedules, track SLA compliance, and identify delayed or stale 
-                  data. Visual freshness indicators with breach notifications.
+                  data. Visual freshness indicators with breach notifications and export capabilities.
                 </p>
               </div>
 
@@ -117,7 +123,7 @@ export function AboutPage() {
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Monitor production incidents, track error rates by service, view MTTR metrics, 
-                  and manage incident resolution workflows with severity-based prioritization.
+                  and manage incident resolution workflows with severity-based prioritization and bulk actions.
                 </p>
               </div>
 
@@ -129,6 +135,82 @@ export function AboutPage() {
                 <p className="text-sm text-muted-foreground">
                   Admin and Viewer roles with conditional UI rendering. Admins can retry pipelines, 
                   view logs, and resolve incidents. Viewers have read-only access to dashboards.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* New Features */}
+          <section className="mb-12">
+            <h2 className="mb-6 flex items-center gap-3 text-2xl font-bold text-foreground">
+              <Star className="h-7 w-7 text-yellow-500" />
+              New Features
+            </h2>
+            
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
+                  <Keyboard className="h-5 w-5 text-indigo-600" />
+                  Keyboard Shortcuts
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Navigate quickly with keyboard shortcuts. Press ? for help, use g+d to go to dashboard, 
+                  g+p for pipelines, / to focus search, and more.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
+                  <Download className="h-5 w-5 text-cyan-600" />
+                  CSV Export
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Export any table data to CSV format. Available for pipelines, incidents, datasets, 
+                  and error logs with automatic file naming.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
+                  <TrendingUp className="h-5 w-5 text-orange-600" />
+                  Health Score
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Overall system health monitoring with individual scores for pipelines, datasets, 
+                  incidents, and API health. Visual progress bars show real-time status.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
+                  <Monitor className="h-5 w-5 text-teal-600" />
+                  Recent Activity Feed
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Real-time activity tracking showing pipeline retries, incident resolutions, 
+                  SLA breaches, and system events with timestamps and severity indicators.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
+                  <Moon className="h-5 w-5 text-slate-600" />
+                  Auto Dark Mode
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Automatic theme switching based on time of day (8 PM - 6 AM). Manual override 
+                  available in settings with persistent preferences.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
+                  <Activity className="h-5 w-5 text-emerald-600" />
+                  Bulk Actions
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Select multiple items and perform bulk operations. Retry multiple failed pipelines 
+                  or resolve multiple incidents simultaneously for improved efficiency.
                 </p>
               </div>
             </div>

@@ -1,8 +1,9 @@
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { KpiCard, KpiGrid } from '@/components/ui/kpi-card';
-import { Table } from '@/components/tables';
+import { EnhancedTable as Table } from '@/components/tables/enhanced-table';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { useAppStore } from '@/store/app-store';
 import { formatDate } from '@/utils/formatting';
@@ -13,13 +14,16 @@ import {
   Clock,
   Activity,
   Server,
-  XCircle
+  XCircle,
+  Trash2
 } from 'lucide-react';
 import { PieChartComponent } from '@/components/charts';
 import type { Incident } from '@/types/incidents';
 
 export const IncidentTracking = () => {
-  const { incidents, errorLogs, serviceHealth, currentUser, updateIncidentStatus } = useAppStore();
+  const { incidents, errorLogs, serviceHealth, currentUser, updateIncidentStatus, resolveMultipleIncidents } = useAppStore();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [filter, setFilter] = useState<'all' | 'active' | 'resolved'>('all');
 
   const activeIncidents = incidents.filter(i => i.status === 'open' || i.status === 'investigating');
   const resolvedIncidents = incidents.filter(i => i.status === 'resolved' || i.status === 'closed');
@@ -29,6 +33,18 @@ export const IncidentTracking = () => {
     : 0;
 
   const degradedServices = serviceHealth.filter(s => s.status === 'degraded');
+
+  // Filter incidents based on selected filter
+  const filteredIncidents = useMemo(() => {
+    switch (filter) {
+      case 'active':
+        return activeIncidents;
+      case 'resolved':
+        return resolvedIncidents;
+      default:
+        return incidents;
+    }
+  }, [incidents, activeIncidents, resolvedIncidents, filter]);
 
   const errorDistribution = [
     { name: 'Runtime', value: 28 },
@@ -136,6 +152,18 @@ export const IncidentTracking = () => {
     }
   ];
 
+  const handleBulkResolve = () => {
+    const activeSelectedIds = selectedIds.filter(id => {
+      const incident = incidents.find(i => i.id === id);
+      return incident && (incident.status === 'open' || incident.status === 'investigating');
+    });
+    
+    if (activeSelectedIds.length > 0) {
+      resolveMultipleIncidents(activeSelectedIds);
+      setSelectedIds([]);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -152,7 +180,7 @@ export const IncidentTracking = () => {
             <span className="font-medium">Active Incidents ({activeIncidents.length})</span>
           </div>
           <div className="mt-3 space-y-2">
-            {activeIncidents.map(incident => (
+            {activeIncidents.slice(0, 3).map(incident => (
               <div key={incident.id} className="flex items-center justify-between p-3 rounded-md bg-background">
                 <div>
                   <p className="font-medium">{incident.title}</p>
@@ -199,11 +227,63 @@ export const IncidentTracking = () => {
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Active Incidents</CardTitle>
-            <CardDescription>Current production incidents</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Incidents</CardTitle>
+                <CardDescription>Current production incidents</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                {(['all', 'active', 'resolved'] as const).map((f) => (
+                  <Button
+                    key={f}
+                    variant={filter === f ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilter(f)}
+                  >
+                    {f.charAt(0).toUpperCase() + f.slice(1)}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            
+            {/* Bulk actions */}
+            {selectedIds.length > 0 && currentUser.role === 'ADMIN' && (
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t">
+                <span className="text-sm text-muted-foreground">
+                  {selectedIds.length} selected
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBulkResolve}
+                  className="gap-2"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Resolve Selected
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedIds([])}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
-            <Table data={activeIncidents} columns={incidentColumns} />
+            <Table 
+              data={filteredIncidents} 
+              columns={incidentColumns} 
+              getRowId={(item) => item.id}
+              enableSelection={currentUser.role === 'ADMIN'}
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+              enableExport={true}
+              exportFileName="incidents"
+              enablePagination={true}
+              pageSize={10}
+            />
           </CardContent>
         </Card>
 
@@ -251,8 +331,13 @@ export const IncidentTracking = () => {
           </CardHeader>
           <CardContent>
             <Table 
-              data={errorLogs.slice(0, 5)} 
-              columns={errorColumns.slice(0, 4)} 
+              data={errorLogs.slice(0, 10)} 
+              columns={errorColumns}
+              getRowId={(item) => item.id}
+              enableExport={true}
+              exportFileName="errors"
+              enablePagination={true}
+              pageSize={5}
             />
           </CardContent>
         </Card>
@@ -261,11 +346,19 @@ export const IncidentTracking = () => {
       {currentUser.role === 'ADMIN' && (
         <Card>
           <CardHeader>
-            <CardTitle>Recent Error Logs</CardTitle>
+            <CardTitle>All Error Logs</CardTitle>
             <CardDescription>Detailed error information</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table data={errorLogs} columns={errorColumns} />
+            <Table 
+              data={errorLogs} 
+              columns={errorColumns}
+              getRowId={(item) => item.id}
+              enableExport={true}
+              exportFileName="all-errors"
+              enablePagination={true}
+              pageSize={15}
+            />
           </CardContent>
         </Card>
       )}

@@ -1,10 +1,10 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { KpiCard, KpiGrid } from '@/components/ui/kpi-card';
-import { Table } from '@/components/tables';
+import { EnhancedTable as Table } from '@/components/tables/enhanced-table';
 import { useAppStore } from '@/store/app-store';
 import { formatDuration, formatNumber, formatDate } from '@/utils/formatting';
 import { 
@@ -14,15 +14,51 @@ import {
   CheckCircle, 
   Database,
   RefreshCw,
-  ChevronRight
+  ChevronRight,
+  Star,
+  RotateCcw,
+  Trash2
 } from 'lucide-react';
 import type { Pipeline } from '@/types/pipeline';
 
 export const PipelinesList = () => {
   const navigate = useNavigate();
   const search = useSearch({ from: '/pipelines' });
-  const { pipelines, currentUser, retryPipeline } = useAppStore();
-  const [filter, setFilter] = useState<'all' | 'running' | 'failed' | 'success'>('all');
+  const { 
+    pipelines, 
+    currentUser, 
+    retryPipeline, 
+    retryMultiplePipelines,
+    favoritePipelines,
+    toggleFavoritePipeline,
+    isFavorite 
+  } = useAppStore();
+  
+type FilterType = 'all' | 'running' | 'failed' | 'success';
+
+  // URL state persistence for filters
+  const [filter, setFilter] = useState<FilterType>(() => {
+    const savedFilter = (search as { filter?: string }).filter;
+    const validFilters: FilterType[] = ['all', 'running', 'failed', 'success'];
+    return validFilters.includes(savedFilter as FilterType) ? (savedFilter as FilterType) : 'all';
+  });
+  
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(() => {
+    return (search as { favorites?: string }).favorites === 'true';
+  });
+
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Sync URL state
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filter !== 'all') params.set('filter', filter);
+    if (showFavoritesOnly) params.set('favorites', 'true');
+    
+    const newUrl = params.toString() ? `?${params.toString()}` : '';
+    window.history.replaceState({}, '', `/pipelines${newUrl}`);
+  }, [filter, showFavoritesOnly]);
 
   // Handle search query from URL
   const searchQuery = (search as { q?: string }).q?.toLowerCase() || '';
@@ -30,6 +66,8 @@ export const PipelinesList = () => {
   // Memoize filtered pipelines
   const filteredPipelines = useMemo(() => 
     pipelines.filter(p => {
+      // Apply favorites filter
+      if (showFavoritesOnly && !favoritePipelines.includes(p.id)) return false;
       // First apply status filter
       if (filter !== 'all' && p.status.toLowerCase() !== filter) return false;
       // Then apply search filter
@@ -37,7 +75,7 @@ export const PipelinesList = () => {
           !p.description.toLowerCase().includes(searchQuery)) return false;
       return true;
     }),
-    [pipelines, filter, searchQuery]
+    [pipelines, filter, searchQuery, showFavoritesOnly, favoritePipelines]
   );
 
   // Memoize metrics calculation
@@ -62,6 +100,23 @@ export const PipelinesList = () => {
     retryPipeline(item.id);
   }, [retryPipeline]);
 
+  const handleBulkRetry = useCallback(() => {
+    const failedSelectedIds = selectedIds.filter(id => {
+      const pipeline = pipelines.find(p => p.id === id);
+      return pipeline?.status === 'FAILED';
+    });
+    
+    if (failedSelectedIds.length > 0) {
+      retryMultiplePipelines(failedSelectedIds);
+      setSelectedIds([]);
+    }
+  }, [selectedIds, pipelines, retryMultiplePipelines]);
+
+  const handleToggleFavorite = useCallback((e: React.MouseEvent, item: Pipeline) => {
+    e.stopPropagation();
+    toggleFavoritePipeline(item.id);
+  }, [toggleFavoritePipeline]);
+
   // Memoize columns configuration
   const columns = useMemo(() => [
     {
@@ -73,7 +128,12 @@ export const PipelinesList = () => {
             <GitBranch className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="font-medium">{item.name}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-medium">{item.name}</p>
+              {isFavorite(item.id) && (
+                <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">{item.description}</p>
           </div>
         </div>
@@ -123,6 +183,14 @@ export const PipelinesList = () => {
       header: '',
       render: (_: unknown, item: Pipeline) => (
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => handleToggleFavorite(e, item)}
+            className={isFavorite(item.id) ? 'text-yellow-500' : ''}
+          >
+            <Star className={`h-4 w-4 ${isFavorite(item.id) ? 'fill-current' : ''}`} />
+          </Button>
           {currentUser.role === 'ADMIN' && item.status === 'FAILED' && (
             <Button
               variant="ghost"
@@ -136,7 +204,7 @@ export const PipelinesList = () => {
         </div>
       )
     }
-  ], [currentUser.role, handleRetry]);
+  ], [currentUser.role, handleRetry, isFavorite, handleToggleFavorite]);
 
   return (
     <div className="space-y-6">
@@ -178,24 +246,66 @@ export const PipelinesList = () => {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Pipeline Status</CardTitle>
-              <CardDescription>
-                Real-time pipeline execution status
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
-              {(['all', 'running', 'failed', 'success'] as const).map((f) => (
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Pipeline Status</CardTitle>
+                <CardDescription>
+                  Real-time pipeline execution status
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
                 <Button
-                  key={f}
-                  variant={filter === f ? 'default' : 'outline'}
+                  variant={showFavoritesOnly ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setFilter(f)}
+                  onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                  className="gap-2"
                 >
-                  {f.charAt(0).toUpperCase() + f.slice(1)}
+                  <Star className="h-4 w-4" />
+                  {showFavoritesOnly ? 'All' : 'Favorites'}
                 </Button>
-              ))}
+              </div>
+            </div>
+            
+            {/* Filter buttons */}
+            <div className="flex items-center justify-between">
+              <div className="flex gap-2">
+                {(['all', 'running', 'failed', 'success'] as const).map((f) => (
+                  <Button
+                    key={f}
+                    variant={filter === f ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilter(f)}
+                  >
+                    {f.charAt(0).toUpperCase() + f.slice(1)}
+                  </Button>
+                ))}
+              </div>
+              
+              {/* Bulk actions */}
+              {selectedIds.length > 0 && currentUser.role === 'ADMIN' && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {selectedIds.length} selected
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleBulkRetry}
+                    className="gap-2"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Retry Failed
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedIds([])}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -204,6 +314,14 @@ export const PipelinesList = () => {
             data={filteredPipelines}
             columns={columns}
             onRowClick={handleRowClick}
+            getRowId={(item) => item.id}
+            enableSelection={currentUser.role === 'ADMIN'}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
+            enableExport={true}
+            exportFileName="pipelines"
+            enablePagination={true}
+            pageSize={10}
           />
         </CardContent>
       </Card>

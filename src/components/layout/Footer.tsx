@@ -10,7 +10,7 @@ export function Footer() {
                     {/* Brand & Copyright */}
                     <div className='flex flex-col sm:flex-row items-center gap-2 text-muted-foreground text-sm'>
                         <span className='font-medium text-foreground'>
-                            DataOps Analytics
+                            DataOps Analytics - Developed by Abhishek
                         </span>
                         <span className='hidden sm:inline text-border'>•</span>
                         <span>{currentYear}</span>
