@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SegmentationRouteImport } from './routes/segmentation'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as PipelinesRouteImport } from './routes/pipelines'
 import { Route as LandingRouteImport } from './routes/landing'
 import { Route as IncidentsRouteImport } from './routes/incidents'
@@ -23,6 +24,11 @@ import { Route as PipelinesPipelineIdRouteImport } from './routes/pipelines.$pip
 const SegmentationRoute = SegmentationRouteImport.update({
   id: '/segmentation',
   path: '/segmentation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PipelinesRoute = PipelinesRouteImport.update({
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/incidents': typeof IncidentsRoute
   '/landing': typeof LandingRoute
   '/pipelines': typeof PipelinesRouteWithChildren
+  '/search': typeof SearchRoute
   '/segmentation': typeof SegmentationRoute
   '/pipelines/$pipelineId': typeof PipelinesPipelineIdRoute
   '/pipelines/': typeof PipelinesIndexRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/freshness': typeof FreshnessRoute
   '/incidents': typeof IncidentsRoute
   '/landing': typeof LandingRoute
+  '/search': typeof SearchRoute
   '/segmentation': typeof SegmentationRoute
   '/pipelines/$pipelineId': typeof PipelinesPipelineIdRoute
   '/pipelines': typeof PipelinesIndexRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/incidents': typeof IncidentsRoute
   '/landing': typeof LandingRoute
   '/pipelines': typeof PipelinesRouteWithChildren
+  '/search': typeof SearchRoute
   '/segmentation': typeof SegmentationRoute
   '/pipelines/$pipelineId': typeof PipelinesPipelineIdRoute
   '/pipelines/': typeof PipelinesIndexRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/incidents'
     | '/landing'
     | '/pipelines'
+    | '/search'
     | '/segmentation'
     | '/pipelines/$pipelineId'
     | '/pipelines/'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/freshness'
     | '/incidents'
     | '/landing'
+    | '/search'
     | '/segmentation'
     | '/pipelines/$pipelineId'
     | '/pipelines'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/incidents'
     | '/landing'
     | '/pipelines'
+    | '/search'
     | '/segmentation'
     | '/pipelines/$pipelineId'
     | '/pipelines/'
@@ -153,6 +165,7 @@ export interface RootRouteChildren {
   IncidentsRoute: typeof IncidentsRoute
   LandingRoute: typeof LandingRoute
   PipelinesRoute: typeof PipelinesRouteWithChildren
+  SearchRoute: typeof SearchRoute
   SegmentationRoute: typeof SegmentationRoute
 }
 
@@ -163,6 +176,13 @@ declare module '@tanstack/react-router' {
       path: '/segmentation'
       fullPath: '/segmentation'
       preLoaderRoute: typeof SegmentationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pipelines': {
@@ -253,6 +273,7 @@ const rootRouteChildren: RootRouteChildren = {
   IncidentsRoute: IncidentsRoute,
   LandingRoute: LandingRoute,
   PipelinesRoute: PipelinesRouteWithChildren,
+  SearchRoute: SearchRoute,
   SegmentationRoute: SegmentationRoute,
 }
 export const routeTree = rootRouteImport

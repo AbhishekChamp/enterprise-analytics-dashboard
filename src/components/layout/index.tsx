@@ -23,8 +23,12 @@ import { cn } from "@/utils/formatting";
 import { useTheme } from "@/hooks/use-theme";
 import { useAppStore } from "@/store/app-store";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { KeyboardShortcutsHelp } from "@/components/keyboard-shortcuts-help";
 import { Footer } from "./Footer";
+import { OnboardingTour } from "@/components/onboarding-tour";
+import { ConnectionStatus } from "@/components/connection-status";
+import { GlobalSearch } from "@/components/global-search";
 import toast from "react-hot-toast";
 
 const navigation = [
@@ -200,10 +204,11 @@ export const Sidebar = () => {
 
             {/* Mobile sidebar */}
             {mobileOpen && (
-                <div className='lg:hidden fixed inset-0 z-40'>
+                <div className='lg:hidden fixed inset-0 z-40' role="dialog" aria-modal="true" aria-label="Mobile navigation">
                     <div
                         className='absolute inset-0 bg-black/50'
                         onClick={() => setMobileOpen(false)}
+                        aria-hidden="true"
                     />
                     <div className='absolute left-0 top-0 h-full w-64 bg-background border-r border-border flex flex-col'>
                         <SidebarContent
@@ -226,6 +231,9 @@ export const Sidebar = () => {
                     "hidden lg:flex flex-col h-screen bg-background border-r border-border transition-all duration-300",
                     collapsed ? "w-16" : "w-64",
                 )}
+                role="navigation"
+                aria-label="Main navigation"
+                data-tour="sidebar"
             >
                 <SidebarContent
                     collapsed={collapsed}
@@ -427,7 +435,6 @@ const SettingsPanel = ({
     isOpen: boolean;
     onClose: () => void;
 }) => {
-    const navigate = useNavigate();
     const { themeMode, setThemeMode, theme } = useTheme();
     const [settings, setSettings] = useState({
         emailNotifications: true,
@@ -445,9 +452,13 @@ const SettingsPanel = ({
     const handleSignOut = () => {
         toast.success("Signed out successfully");
         onClose();
+        // Clear the explored flag so user must go through landing page again
+        localStorage.removeItem('hasExploredApp');
+        localStorage.removeItem('userRole');
+        // Use window.location for a full page redirect to ensure navigation works
         setTimeout(() => {
-            navigate({ to: "/landing" });
-        }, 500);
+            window.location.href = "/landing";
+        }, 100);
     };
 
     if (!isOpen) return null;
@@ -613,55 +624,71 @@ export const Header = () => {
 
     return (
         <>
-            <header className='h-16 border-b border-border bg-background flex items-center justify-between px-6 relative'>
-                <div className='flex items-center gap-4 flex-1'>
+            <header 
+                className='h-16 border-b border-border bg-background flex items-center justify-between px-6 relative'
+                role="banner"
+                aria-label="Dashboard Header"
+            >
+                <div className='flex items-center gap-4 flex-1' data-tour="search">
                     <form
                         onSubmit={handleSearch}
                         className='relative max-w-md w-full'
+                        role="search"
+                        aria-label="Global search"
                     >
-                        <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+                        <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' aria-hidden="true" />
                         <input
                             type='text'
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder='Search pipelines, datasets, incidents... (Press / to focus)'
-                            className='w-full pl-10 pr-4 py-2 text-sm border rounded-md bg-background'
+                            className='w-full pl-10 pr-4 py-2 text-sm border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all'
+                            aria-label="Search pipelines, datasets, and incidents"
                         />
                     </form>
                 </div>
 
                 <div className='flex items-center gap-4'>
+                    <ConnectionStatus />
+                    
+                    <GlobalSearch />
+
                     <button
                         onClick={() => setShortcutsOpen(true)}
-                        className='p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent'
+                        className='p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all'
                         title='Keyboard shortcuts (?)'
+                        aria-label="Open keyboard shortcuts"
                     >
-                        <Keyboard className='h-5 w-5' />
+                        <Keyboard className='h-5 w-5' aria-hidden="true" />
                     </button>
 
                     <button
                         onClick={toggleTheme}
-                        className='p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent'
+                        className='p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all'
                         title={
                             theme === "light"
                                 ? "Switch to dark mode (t)"
                                 : "Switch to light mode (t)"
                         }
+                        aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
                     >
                         {theme === "light" ? (
-                            <Moon className='h-5 w-5' />
+                            <Moon className='h-5 w-5' aria-hidden="true" />
                         ) : (
-                            <Sun className='h-5 w-5' />
+                            <Sun className='h-5 w-5' aria-hidden="true" />
                         )}
                     </button>
 
-                    <div className='relative'>
+                    <div className='relative' data-tour="notifications">
                         <button
                             onClick={toggleNotifications}
-                            className='relative p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent'
+                            className='relative p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all'
+                            aria-label="Notifications"
+                            aria-haspopup="true"
+                            aria-expanded={notificationsOpen}
                         >
-                            <Bell className='h-5 w-5' />
-                            <span className='absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full' />
+                            <Bell className='h-5 w-5' aria-hidden="true" />
+                            <span className='absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full' aria-label="New notifications" />
                         </button>
                         <NotificationPanel
                             isOpen={notificationsOpen}
@@ -669,12 +696,15 @@ export const Header = () => {
                         />
                     </div>
 
-                    <div className='relative'>
+                    <div className='relative' data-tour="settings">
                         <button
                             onClick={toggleSettings}
-                            className='p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent'
+                            className='p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all'
+                            aria-label="Settings"
+                            aria-haspopup="true"
+                            aria-expanded={settingsOpen}
                         >
-                            <Settings className='h-5 w-5' />
+                            <Settings className='h-5 w-5' aria-hidden="true" />
                         </button>
                         <SettingsPanel
                             isOpen={settingsOpen}
@@ -682,17 +712,20 @@ export const Header = () => {
                         />
                     </div>
 
-                    <div className='flex items-center gap-3 pl-4 border-l border-border'>
+                    <div className='flex items-center gap-3 pl-4 border-l border-border' role="group" aria-label="User profile">
                         <div className='text-right'>
-                            <p className='text-sm font-medium'>
+                            <p className='text-sm font-medium' aria-label={`User name: ${currentUser.name}`}>
                                 {currentUser.name}
                             </p>
-                            <p className='text-xs text-muted-foreground'>
+                            <p className='text-xs text-muted-foreground' aria-label={`Role: ${currentUser.role}`}>
                                 {currentUser.role}
                             </p>
                         </div>
-                        <div className='h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center'>
-                            <span className='text-sm font-medium text-primary'>
+                        <div 
+                            className='h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center'
+                            aria-label="User avatar"
+                        >
+                            <span className='text-sm font-medium text-primary' aria-hidden="true">
                                 {currentUser.name.charAt(0)}
                             </span>
                         </div>
@@ -709,14 +742,19 @@ export const Header = () => {
 };
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
+    useAuthGuard();
+    
     return (
-        <div className='flex min-h-screen bg-background'>
+        <div className='flex min-h-screen bg-background' role="main" aria-label="Dashboard Layout">
             <Sidebar />
             <div className='flex-1 flex flex-col min-w-0'>
                 <Header />
-                <main className='flex-1 overflow-auto p-6'>{children}</main>
+                <main className='flex-1 overflow-auto p-6' role="region" aria-label="Main Content">
+                    {children}
+                </main>
                 <Footer />
             </div>
+            <OnboardingTour />
         </div>
     );
 };

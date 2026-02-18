@@ -367,3 +367,6 @@ export const MultiLineChartComponent = memo(({
 });
 
 MultiLineChartComponent.displayName = 'MultiLineChartComponent';
+
+// Export the ChartExportWrapper
+export { ChartExportWrapper } from './chart-export-wrapper';

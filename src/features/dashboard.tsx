@@ -116,7 +116,8 @@ export const Dashboard = () => {
       </div>
 
       {/* KPI Grid with Tooltips */}
-      <KpiGrid>
+      <div data-tour="kpi-cards">
+        <KpiGrid>
         <KpiCard
           title="Active Pipelines"
           value={`${pipelineMetrics.running}/${pipelineMetrics.total}`}
@@ -149,6 +150,7 @@ export const Dashboard = () => {
           tooltip="Median (P50) API response time across all regions and endpoints"
         />
       </KpiGrid>
+      </div>
 
       {/* Comparative Analytics */}
       {showComparative && (
@@ -199,7 +201,7 @@ export const Dashboard = () => {
         </Card>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3" data-tour="charts">
         {/* API Latency Chart */}
         <Card className="lg:col-span-2">
           <CardHeader>
