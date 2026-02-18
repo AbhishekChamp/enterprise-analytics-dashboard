@@ -7,6 +7,12 @@ import type { DatasetFreshness, FreshnessStatus } from '@/types/freshness';
 import type { Incident, IncidentStatus, ErrorLog } from '@/types/incidents';
 import type { Activity } from '@/types/activity';
 import { createActivity } from '@/types/activity';
+import type { LineageGraph, ImpactAnalysis } from '@/types/lineage';
+import type { CostMetric, CostBudget, CostAttribution, CostSummary } from '@/types/cost-analytics';
+import type { QueryMetrics, QueryOptimization, TableStatistics, QueryPerformanceSummary } from '@/types/query-performance';
+import type { SchemaRegistry, SchemaEvolution } from '@/types/schema-registry';
+import type { StreamMetrics, StreamingSummary } from '@/types/streaming';
+import type { DataDomain, DataMeshGovernance, DomainRelationship } from '@/types/data-mesh';
 import {
   initialPipelines,
   initialApiMetrics,
@@ -15,7 +21,24 @@ import {
   activeIncidents,
   recentIncidents,
   errorLogs,
-  serviceHealth
+  serviceHealth,
+  mockLineageGraph,
+  mockImpactAnalysis,
+  mockCostMetrics,
+  mockCostBudgets,
+  mockCostAttribution,
+  mockCostSummary,
+  mockQueryMetrics,
+  mockQueryOptimizations,
+  mockTableStatistics,
+  mockQueryPerformanceSummary,
+  mockSchemaRegistries,
+  mockSchemaEvolution,
+  mockStreamMetrics,
+  mockStreamingSummary,
+  mockDataDomains,
+  mockDataMeshGovernance,
+  mockDomainRelationships,
 } from '@/mock-data';
 
 // Maximum number of metrics to keep in memory
@@ -67,6 +90,38 @@ interface AppState {
 
   // Performance
   lastDataUpdate: string;
+
+  // Data Lineage
+  lineageGraph: LineageGraph;
+  impactAnalysis: ImpactAnalysis[];
+  getImpactAnalysis: (nodeId: string) => ImpactAnalysis | undefined;
+
+  // Cost Analytics
+  costMetrics: CostMetric[];
+  costBudgets: CostBudget[];
+  costAttribution: CostAttribution[];
+  costSummary: CostSummary;
+
+  // Query Performance
+  queryMetrics: QueryMetrics[];
+  queryOptimizations: QueryOptimization[];
+  tableStatistics: TableStatistics[];
+  queryPerformanceSummary: QueryPerformanceSummary;
+
+  // Schema Registry
+  schemaRegistries: SchemaRegistry[];
+  schemaEvolution: SchemaEvolution[];
+  getSchemaById: (id: string) => SchemaRegistry | undefined;
+
+  // Streaming
+  streamMetrics: StreamMetrics[];
+  streamingSummary: StreamingSummary;
+
+  // Data Mesh
+  dataDomains: DataDomain[];
+  dataMeshGovernance: DataMeshGovernance;
+  domainRelationships: DomainRelationship[];
+  getDomainById: (id: string) => DataDomain | undefined;
 }
 
 const initialUser: User = {
@@ -301,7 +356,39 @@ export const useAppStore = create<AppState>()(
       }), false, 'toggleSimulation'),
 
       // Performance
-      lastDataUpdate: new Date().toISOString()
+      lastDataUpdate: new Date().toISOString(),
+
+      // Data Lineage
+      lineageGraph: mockLineageGraph,
+      impactAnalysis: mockImpactAnalysis,
+      getImpactAnalysis: (nodeId) => get().impactAnalysis.find(ia => ia.nodeId === nodeId),
+
+      // Cost Analytics
+      costMetrics: mockCostMetrics,
+      costBudgets: mockCostBudgets,
+      costAttribution: mockCostAttribution,
+      costSummary: mockCostSummary,
+
+      // Query Performance
+      queryMetrics: mockQueryMetrics,
+      queryOptimizations: mockQueryOptimizations,
+      tableStatistics: mockTableStatistics,
+      queryPerformanceSummary: mockQueryPerformanceSummary,
+
+      // Schema Registry
+      schemaRegistries: mockSchemaRegistries,
+      schemaEvolution: mockSchemaEvolution,
+      getSchemaById: (id) => get().schemaRegistries.find(s => s.id === id),
+
+      // Streaming
+      streamMetrics: mockStreamMetrics,
+      streamingSummary: mockStreamingSummary,
+
+      // Data Mesh
+      dataDomains: mockDataDomains,
+      dataMeshGovernance: mockDataMeshGovernance,
+      domainRelationships: mockDomainRelationships,
+      getDomainById: (id) => get().dataDomains.find(d => d.id === id),
     }),
     { name: 'app-store' }
   )

@@ -11,13 +11,18 @@ import {
     X,
     ChevronLeft,
     ChevronRight,
-    Search,
     Bell,
     Settings,
     Sun,
     Moon,
     LogOut,
     Keyboard,
+    Share2,
+    DollarSign,
+    Zap,
+    FileJson,
+    Database,
+    Building2,
 } from "lucide-react";
 import { cn } from "@/utils/formatting";
 import { useTheme } from "@/hooks/use-theme";
@@ -25,6 +30,7 @@ import { useAppStore } from "@/store/app-store";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { KeyboardShortcutsHelp } from "@/components/keyboard-shortcuts-help";
+import { SearchBar } from "@/components/search-bar";
 import { Footer } from "./Footer";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { ConnectionStatus } from "@/components/connection-status";
@@ -58,6 +64,15 @@ const navigation = [
         icon: AlertCircle,
         shortcut: "g+i",
     },
+];
+
+const deNavigation = [
+    { name: "Data Lineage", href: "/lineage", icon: Share2, shortcut: "g+l" },
+    { name: "Cost Analytics", href: "/cost-analytics", icon: DollarSign, shortcut: "g+c" },
+    { name: "Query Performance", href: "/query-performance", icon: Zap, shortcut: "g+q" },
+    { name: "Schema Registry", href: "/schema-registry", icon: FileJson, shortcut: "g+r" },
+    { name: "Streaming", href: "/streaming", icon: Database, shortcut: "g+t" },
+    { name: "Data Mesh", href: "/data-mesh", icon: Building2, shortcut: "g+m" },
 ];
 
 interface SidebarContentProps {
@@ -99,7 +114,7 @@ const SidebarContent = ({
             {!collapsed && (
                 <button
                     onClick={() => setCollapsed(true)}
-                    className='hidden lg:flex p-1 rounded-md hover:bg-accent'
+                    className='hidden lg:flex p-1 rounded-md hover:bg-accent cursor-pointer'
                 >
                     <ChevronLeft className='h-4 w-4' />
                 </button>
@@ -115,7 +130,38 @@ const SidebarContent = ({
                             key={item.name}
                             to={item.href}
                             className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
+                                isActive
+                                    ? "bg-primary text-primary-foreground"
+                                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                                collapsed && "justify-center px-2",
+                            )}
+                            onClick={() => setMobileOpen?.(false)}
+                        >
+                            <item.icon className='h-5 w-5 shrink-0' />
+                            {!collapsed && <span>{item.name}</span>}
+                        </Link>
+                    );
+                })}
+            </nav>
+
+            {!collapsed && (
+                <div className="mt-6 px-4">
+                    <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">
+                        Data Engineering
+                    </p>
+                </div>
+            )}
+            
+            <nav className='space-y-1 px-2 mt-2'>
+                {deNavigation.map((item) => {
+                    const isActive = location.pathname === item.href;
+                    return (
+                        <Link
+                            key={item.name}
+                            to={item.href}
+                            className={cn(
+                                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
                                 isActive
                                     ? "bg-primary text-primary-foreground"
                                     : "text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -142,7 +188,7 @@ const SidebarContent = ({
                         onChange={(e) =>
                             setRole(e.target.value as "ADMIN" | "VIEWER")
                         }
-                        className='w-full px-2 py-1 text-sm border rounded bg-background'
+                        className='w-full px-2 py-1 text-sm border rounded bg-background cursor-pointer'
                     >
                         <option value='ADMIN'>Admin</option>
                         <option value='VIEWER'>Viewer</option>
@@ -156,7 +202,7 @@ const SidebarContent = ({
                     <button
                         onClick={toggleSimulation}
                         className={cn(
-                            "w-full px-2 py-1 text-sm rounded transition-colors",
+                            "w-full px-2 py-1 text-sm rounded transition-colors cursor-pointer",
                             isSimulationActive
                                 ? "bg-green-500/10 text-green-600 border border-green-500/20"
                                 : "bg-red-500/10 text-red-600 border border-red-500/20",
@@ -172,7 +218,7 @@ const SidebarContent = ({
             <div className='border-t border-border p-2'>
                 <button
                     onClick={() => setCollapsed(false)}
-                    className='w-full flex justify-center p-1 rounded-md hover:bg-accent'
+                    className='w-full flex justify-center p-1 rounded-md hover:bg-accent cursor-pointer'
                 >
                     <ChevronRight className='h-4 w-4' />
                 </button>
@@ -193,7 +239,7 @@ export const Sidebar = () => {
             {/* Mobile menu button */}
             <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className='lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-background border border-border shadow-sm'
+                className='lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-background border border-border shadow-sm cursor-pointer'
             >
                 {mobileOpen ? (
                     <X className='h-5 w-5' />
@@ -260,7 +306,7 @@ const ToggleSwitch = ({
     <button
         onClick={onChange}
         className={cn(
-            "w-11 h-6 rounded-full relative transition-colors duration-200",
+            "w-11 h-6 rounded-full relative transition-colors duration-200 cursor-pointer",
             checked ? "bg-primary" : "bg-muted",
         )}
     >
@@ -346,7 +392,7 @@ const NotificationPanel = ({
                 </div>
                 <button
                     onClick={onClose}
-                    className='p-1 hover:bg-accent rounded'
+                    className='p-1 hover:bg-accent rounded cursor-pointer'
                 >
                     <X className='h-4 w-4' />
                 </button>
@@ -412,13 +458,13 @@ const NotificationPanel = ({
                             prev.map((n) => ({ ...n, read: true })),
                         )
                     }
-                    className='text-sm text-muted-foreground hover:text-foreground'
+                    className='text-sm text-muted-foreground hover:text-foreground cursor-pointer'
                 >
                     Mark all as read
                 </button>
                 <button
                     onClick={handleViewAll}
-                    className='text-sm text-primary hover:underline'
+                    className='text-sm text-primary hover:underline cursor-pointer'
                 >
                     View all
                 </button>
@@ -469,7 +515,7 @@ const SettingsPanel = ({
                 <h3 className='font-semibold'>Settings</h3>
                 <button
                     onClick={onClose}
-                    className='p-1 hover:bg-accent rounded'
+                    className='p-1 hover:bg-accent rounded cursor-pointer'
                 >
                     <X className='h-4 w-4' />
                 </button>
@@ -485,7 +531,7 @@ const SettingsPanel = ({
                         onChange={(e) =>
                             setThemeMode(e.target.value as "manual" | "auto")
                         }
-                        className='w-full px-2 py-1 text-sm border rounded bg-background'
+                        className='w-full px-2 py-1 text-sm border rounded bg-background cursor-pointer'
                     >
                         <option value='manual'>Manual</option>
                         <option value='auto'>Auto (8PM-6AM)</option>
@@ -541,7 +587,7 @@ const SettingsPanel = ({
                 <div className='pt-4 border-t border-border space-y-2'>
                     <button
                         onClick={handleSignOut}
-                        className='w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-md transition-colors'
+                        className='w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-md transition-colors cursor-pointer'
                     >
                         <LogOut className='h-4 w-4' />
                         Sign Out
@@ -556,7 +602,6 @@ export const Header = () => {
     const { currentUser } = useAppStore();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
-    const [searchQuery, setSearchQuery] = useState("");
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -568,16 +613,6 @@ export const Header = () => {
                 key: "?",
                 description: "Show keyboard shortcuts",
                 action: () => setShortcutsOpen(true),
-            },
-            {
-                key: "/",
-                description: "Focus search",
-                action: () => {
-                    const searchInput = document.querySelector(
-                        'input[type="text"]',
-                    ) as HTMLInputElement;
-                    searchInput?.focus();
-                },
             },
             {
                 key: "t",
@@ -596,21 +631,16 @@ export const Header = () => {
                 description: `Go to ${nav.name}`,
                 action: () => navigate({ to: nav.href }),
             })),
+            ...deNavigation.map((nav) => ({
+                key: nav.shortcut,
+                description: `Go to ${nav.name}`,
+                action: () => navigate({ to: nav.href }),
+            })),
         ],
         [navigate, toggleTheme, setShortcutsOpen],
     );
 
     useKeyboardShortcuts(shortcuts);
-
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (searchQuery.trim()) {
-            navigate({
-                to: "/pipelines",
-                search: { q: searchQuery },
-            });
-        }
-    };
 
     const toggleNotifications = () => {
         setNotificationsOpen(!notificationsOpen);
@@ -630,22 +660,7 @@ export const Header = () => {
                 aria-label="Dashboard Header"
             >
                 <div className='flex items-center gap-4 flex-1' data-tour="search">
-                    <form
-                        onSubmit={handleSearch}
-                        className='relative max-w-md w-full'
-                        role="search"
-                        aria-label="Global search"
-                    >
-                        <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' aria-hidden="true" />
-                        <input
-                            type='text'
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder='Search pipelines, datasets, incidents... (Press / to focus)'
-                            className='w-full pl-10 pr-4 py-2 text-sm border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all'
-                            aria-label="Search pipelines, datasets, and incidents"
-                        />
-                    </form>
+                    <SearchBar />
                 </div>
 
                 <div className='flex items-center gap-4'>
@@ -655,7 +670,7 @@ export const Header = () => {
 
                     <button
                         onClick={() => setShortcutsOpen(true)}
-                        className='p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all'
+                        className='p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer'
                         title='Keyboard shortcuts (?)'
                         aria-label="Open keyboard shortcuts"
                     >
@@ -664,7 +679,7 @@ export const Header = () => {
 
                     <button
                         onClick={toggleTheme}
-                        className='p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all'
+                        className='p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer'
                         title={
                             theme === "light"
                                 ? "Switch to dark mode (t)"
@@ -682,7 +697,7 @@ export const Header = () => {
                     <div className='relative' data-tour="notifications">
                         <button
                             onClick={toggleNotifications}
-                            className='relative p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all'
+                            className='relative p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer'
                             aria-label="Notifications"
                             aria-haspopup="true"
                             aria-expanded={notificationsOpen}
@@ -699,7 +714,7 @@ export const Header = () => {
                     <div className='relative' data-tour="settings">
                         <button
                             onClick={toggleSettings}
-                            className='p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all'
+                            className='p-2 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer'
                             aria-label="Settings"
                             aria-haspopup="true"
                             aria-expanded={settingsOpen}

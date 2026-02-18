@@ -2,9 +2,14 @@
 
 A production-grade frontend-only enterprise analytics dashboard that simulates a real-world data engineering and business intelligence platform. Monitor ETL pipelines, API performance, data freshness, user segmentation, and incidents with real-time simulation and role-based access control.
 
+![1771443160134](image/README/1771443160134.png)
+
+![1771443327706](image/README/1771443327706.png)
+
 ## Features
 
 ### Data Pipeline Monitoring
+
 - **ETL Job Tracking**: Monitor pipeline execution status (PENDING, RUNNING, SUCCESS, FAILED)
 - **Step-Level Breakdown**: View detailed execution steps with logs and timing
 - **Retry Capabilities**: Admin users can retry failed pipelines
@@ -15,6 +20,7 @@ A production-grade frontend-only enterprise analytics dashboard that simulates a
 - **CSV Export**: Export pipeline data to CSV format
 
 ### API Observability
+
 - **Latency Metrics**: P50, P95, and P99 latency tracking across regions
 - **Error Rate Monitoring**: Real-time error percentage with alerting
 - **Throughput Analysis**: Requests per minute with trend indicators
@@ -23,6 +29,7 @@ A production-grade frontend-only enterprise analytics dashboard that simulates a
 - **Chart Zoom/Pan**: Interactive charts with zoom and pan capabilities
 
 ### Data Freshness & SLA Monitoring
+
 - **Dataset Tracking**: Monitor refresh schedules for critical datasets
 - **SLA Compliance**: Visual indicators for FRESH, DELAYED, and STALE status
 - **Breach Notifications**: Automatic SLA breach detection with activity logging
@@ -32,6 +39,7 @@ A production-grade frontend-only enterprise analytics dashboard that simulates a
 - **URL State Persistence**: Share filtered views with URL parameters
 
 ### User Segmentation Analytics
+
 - **Segment Performance**: Revenue, growth rate, and retention by segment
 - **Regional Distribution**: Geographic user distribution with growth rates
 - **Plan Analysis**: Free, Pro, and Enterprise plan breakdown
@@ -39,6 +47,7 @@ A production-grade frontend-only enterprise analytics dashboard that simulates a
 - **Churn Tracking**: Monitor user churn rates across segments
 
 ### Incident & Error Tracking
+
 - **Incident Management**: Track active, investigating, resolved, and closed incidents
 - **Bulk Resolution**: Resolve multiple incidents simultaneously
 - **Severity Levels**: Critical, high, medium, and low severity classification
@@ -48,12 +57,23 @@ A production-grade frontend-only enterprise analytics dashboard that simulates a
 - **CSV Export**: Export incidents and error logs to CSV format
 
 ### Health Score & System Monitoring
+
 - **Overall Health Score**: 0-100% system health indicator
 - **Component Breakdown**: Individual scores for pipelines, datasets, incidents, and API
 - **Visual Progress Bars**: Real-time health visualization
 - **Performance Monitor**: Development-mode FPS, memory, and DOM node tracking
 
+### Data Engineering Features
+
+- **Data Lineage**: Visual DAG showing data flow from streams through pipelines to datasets and consumers. Impact analysis with blast radius calculation.
+- **Cost Analytics**: Infrastructure cost tracking by category (compute, storage, network, licensing). Budget monitoring with alerts and team attribution.
+- **Query Performance**: Monitor query execution metrics, identify slow queries, and get optimization suggestions. Schema statistics and caching analysis.
+- **Schema Registry**: Track schema evolution with version history, compatibility checking (backward/forward/full), and breaking change detection.
+- **Streaming Metrics**: Real-time monitoring of Kafka/Kinesis streams with consumer lag tracking, throughput metrics, and partition health.
+- **Data Mesh**: Domain-oriented data ownership visualization with data product catalog, SLAs, and federated governance.
+
 ### Real-Time Simulation
+
 - **Live Data Updates**: Simulated production environment with dynamic data
 - **Pipeline Status Changes**: Jobs transition through states automatically
 - **API Metrics Fluctuation**: Latency and error rates vary in real-time
@@ -62,11 +82,14 @@ A production-grade frontend-only enterprise analytics dashboard that simulates a
 - **Activity Feed**: Real-time logging of all system events
 
 ### Keyboard Shortcuts
+
 - **Navigation**: g+d (Dashboard), g+p (Pipelines), g+a (API), g+f (Freshness), g+s (Segmentation), g+i (Incidents)
+- **Data Engineering**: g+l (Lineage), g+c (Cost Analytics), g+q (Query Performance), g+r (Schema Registry), g+t (Streaming), g+m (Data Mesh)
 - **Actions**: / (Focus search), t (Toggle theme), r (Refresh), ? (Show shortcuts)
 - **Quick Access**: Press ? anywhere to view all available shortcuts
 
 ### User Experience
+
 - **Dark/Light Theme**: Toggle between themes with system preference detection
 - **Auto Dark Mode**: Automatically switches to dark mode from 8 PM to 6 AM
 - **Global Search**: Search across pipelines, datasets, and incidents
@@ -78,12 +101,14 @@ A production-grade frontend-only enterprise analytics dashboard that simulates a
 - **Recent Activity Feed**: Real-time activity tracking with severity indicators
 
 ### Error Handling & Performance
+
 - **Error Boundaries**: Graceful error handling with retry functionality
 - **Performance Monitoring**: FPS, memory usage, and DOM node tracking (dev mode)
 - **Efficient Rendering**: Memoized computations and optimized re-renders
 - **URL State Persistence**: Filter states persist in URL for shareable links
 
 ### Role-Based Access Control
+
 - **Admin Role**: Full access including retry pipelines, view logs, resolve incidents
 - **Viewer Role**: Read-only access to dashboards and metrics
 - **Conditional UI**: Components render based on user role
@@ -135,6 +160,7 @@ The production build will be in the `dist` directory.
 ## Usage
 
 ### Dashboard Overview
+
 1. View the main dashboard for high-level metrics
 2. See active pipelines, data freshness status, and incidents
 3. Monitor API latency trends with interactive charts
@@ -144,6 +170,7 @@ The production build will be in the `dist` directory.
 7. Click on any metric card to navigate to detailed views
 
 ### Keyboard Shortcuts
+
 1. Press `?` to view all available shortcuts
 2. Use `g+d` to go to Dashboard, `g+p` for Pipelines, etc.
 3. Press `/` to focus the search bar
@@ -151,6 +178,7 @@ The production build will be in the `dist` directory.
 5. Press `r` to refresh the page
 
 ### Monitor Pipelines
+
 1. Navigate to **Pipelines** from the sidebar
 2. View all ETL jobs with status, duration, and records processed
 3. Filter by status: All, Running, Failed, Success
@@ -161,6 +189,7 @@ The production build will be in the `dist` directory.
 8. Use the "Export CSV" button to download pipeline data
 
 ### Track API Performance
+
 1. Go to **API Monitoring** from the sidebar
 2. Select time range: 1h, 24h, 7d, or 30d
 3. View latency percentiles (P50, P95, P99) over time
@@ -169,6 +198,7 @@ The production build will be in the `dist` directory.
 6. See regional distribution and top endpoints
 
 ### Check Data Freshness
+
 1. Navigate to **Data Freshness** from the sidebar
 2. Filter by status: All, Fresh, Delayed, or Stale
 3. Monitor SLA compliance rate and delayed datasets
@@ -176,6 +206,7 @@ The production build will be in the `dist` directory.
 5. Export dataset information to CSV
 
 ### Analyze User Segments
+
 1. Go to **Segmentation** from the sidebar
 2. View user growth trends and plan distribution
 3. Analyze segment performance (revenue, retention, churn)
@@ -183,6 +214,7 @@ The production build will be in the `dist` directory.
 5. Review cohort retention analysis matrix
 
 ### Manage Incidents
+
 1. Navigate to **Incidents** from the sidebar
 2. Filter incidents by status: All, Active, or Resolved
 3. Select multiple active incidents and click "Resolve Selected"
@@ -194,11 +226,13 @@ The production build will be in the `dist` directory.
 9. Export incidents and errors to CSV
 
 ### Switch Roles
+
 1. Open the sidebar
 2. Select role from dropdown: Admin or Viewer
 3. UI updates automatically to show/hide admin features
 
 ### Toggle Theme
+
 1. Click the sun/moon icon in the top header
 2. Switch between dark and light modes manually
 3. Or enable "Auto" mode in Settings to switch automatically (8 PM - 6 AM)
@@ -250,6 +284,7 @@ src/
 ## Architecture Highlights
 
 ### Real-Time Simulation
+
 - Deterministic pseudo-random data generation
 - Simulates job failures, latency spikes, error bursts
 - Automatic state transitions (PENDING → RUNNING → SUCCESS/FAIL)
@@ -257,6 +292,7 @@ src/
 - Activity logging for all state changes
 
 ### State Management
+
 - **Zustand**: Lightweight state management with devtools
 - **Activity Tracking**: All actions logged with timestamps
 - **Role-Based Store**: User role affects UI rendering
@@ -265,6 +301,7 @@ src/
 - **Mock Data**: Base state with realistic enterprise data
 
 ### Component Architecture
+
 - **Feature-Based**: Each module is self-contained
 - **Reusable Components**: Table, charts, cards, and badges
 - **Error Boundaries**: Graceful error handling at component level
@@ -272,12 +309,14 @@ src/
 - **Responsive Design**: Mobile-first with Tailwind
 
 ### Data Visualization
+
 - **Recharts**: Line, area, bar, and pie charts
 - **Interactive Charts**: Tooltips, legends, zoom/pan, and responsive sizing
 - **Real-Time Updates**: Charts update as simulation runs
 - **Multi-Line Support**: Overlay multiple metrics (P50, P95, P99)
 
 ### Theme System
+
 - **CSS Variables**: HSL color values for easy theming
 - **Dark Mode**: Comprehensive dark theme with good contrast
 - **Auto Mode**: Automatic switching based on time (8 PM - 6 AM)
@@ -285,6 +324,7 @@ src/
 - **Persistent**: Theme preference saved to localStorage
 
 ### Performance Optimizations
+
 - **Memoization**: Expensive computations cached with useMemo
 - **Callback Optimization**: Event handlers memoized with useCallback
 - **Efficient Rendering**: Zustand selectors prevent unnecessary re-renders
@@ -335,12 +375,66 @@ Connect your GitHub repository to Vercel for automatic deployments:
 vercel
 ```
 
-### Netlify
+### Netlify (Recommended)
 
-Deploy using:
+The application is optimized for Netlify deployment with the following features:
+
+#### Option 1: Netlify CLI
 
 ```bash
+# Install Netlify CLI globally
+npm install -g netlify-cli
+
+# Deploy to production
 netlify deploy --prod --dir=dist
+```
+
+#### Option 2: Git Integration (Recommended)
+
+1. Connect your GitHub/GitLab/Bitbucket repository to Netlify
+2. Configure build settings:
+    - **Build command:** `pnpm build`
+    - **Publish directory:** `dist`
+    - **Node version:** 20
+3. Netlify will automatically deploy on every push
+
+#### Netlify Optimizations Included
+
+✅ **Performance:**
+
+- Aggressive caching of static assets (JS, CSS, fonts) - 1 year
+- Brotli & Gzip compression enabled
+- Code splitting with optimized chunking
+- CSS code splitting enabled
+
+✅ **Security:**
+
+- Security headers configured (XSS, CSRF, Clickjacking protection)
+- Content Security Policy headers
+- Secure referrer policy
+
+✅ **SEO & Best Practices:**
+
+- Lighthouse plugin integrated
+- Performance thresholds: 80%
+- Accessibility thresholds: 90%
+- Automatic SPA routing support
+
+✅ **Cache Strategy:**
+
+- Static assets (JS/CSS): 1 year cache
+- HTML files: No cache (for instant updates)
+- Images and fonts: 1 year cache
+
+#### Performance Monitoring
+
+Netlify automatically runs Lighthouse audits on every deploy. Check the deploy logs for performance scores.
+
+#### Custom Domain (Optional)
+
+```bash
+# Set custom domain
+netlify domains:add yourdomain.com
 ```
 
 ### Static Hosting

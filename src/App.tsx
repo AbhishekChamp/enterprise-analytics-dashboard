@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './components/layout/theme-provider';
 import { useSimulation } from './hooks/use-simulation';
 import { ErrorBoundary } from './components/error-boundary';
-import { PerformanceMonitor } from './hooks/use-performance-monitoring.tsx';
+import { PerformanceMonitor } from './components/performance-monitor';
 import './app/globals.css';
 
 // Import the generated route tree

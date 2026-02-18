@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import toast from 'react-hot-toast';
 
 interface PDFExportOptions {
   title: string;
@@ -14,7 +15,7 @@ export const exportToPDF = <T extends object>(
   options: PDFExportOptions
 ): void => {
   if (!data.length) {
-    console.warn('No data to export');
+    toast('No data to export', { icon: '⚠️' });
     return;
   }
 

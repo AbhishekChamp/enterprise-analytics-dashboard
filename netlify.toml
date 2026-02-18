@@ -1,0 +1,61 @@
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--version"
+
+# SPA redirect - must be last
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Security and Performance Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+
+# Cache static assets aggressively
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Cache HTML files for a shorter time (for SPA updates)
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Enable Brotli and Gzip compression
+[context.production.environment]
+  NODE_ENV = "production"
+
+# Performance optimization settings
+[context.production]
+  command = "pnpm build"
+
+# Branch deploy settings (for PR previews)
+[context.deploy-preview]
+  command = "pnpm build"
+
+# Deploy settings for different branches
+[context.branch-deploy]
+  command = "pnpm build"
+
+# Plugin configurations
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
+  
+  [plugins.inputs.thresholds]
+    performance = 0.8
+    accessibility = 0.9
+    best-practices = 0.9
+    seo = 0.8

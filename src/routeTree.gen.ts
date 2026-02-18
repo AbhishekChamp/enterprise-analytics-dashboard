@@ -9,18 +9,29 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StreamingRouteImport } from './routes/streaming'
 import { Route as SegmentationRouteImport } from './routes/segmentation'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as SchemaRegistryRouteImport } from './routes/schema-registry'
+import { Route as QueryPerformanceRouteImport } from './routes/query-performance'
 import { Route as PipelinesRouteImport } from './routes/pipelines'
+import { Route as LineageRouteImport } from './routes/lineage'
 import { Route as LandingRouteImport } from './routes/landing'
 import { Route as IncidentsRouteImport } from './routes/incidents'
 import { Route as FreshnessRouteImport } from './routes/freshness'
+import { Route as DataMeshRouteImport } from './routes/data-mesh'
+import { Route as CostAnalyticsRouteImport } from './routes/cost-analytics'
 import { Route as ApiMonitoringRouteImport } from './routes/api-monitoring'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PipelinesIndexRouteImport } from './routes/pipelines.index'
 import { Route as PipelinesPipelineIdRouteImport } from './routes/pipelines.$pipelineId'
 
+const StreamingRoute = StreamingRouteImport.update({
+  id: '/streaming',
+  path: '/streaming',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SegmentationRoute = SegmentationRouteImport.update({
   id: '/segmentation',
   path: '/segmentation',
@@ -31,9 +42,24 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SchemaRegistryRoute = SchemaRegistryRouteImport.update({
+  id: '/schema-registry',
+  path: '/schema-registry',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QueryPerformanceRoute = QueryPerformanceRouteImport.update({
+  id: '/query-performance',
+  path: '/query-performance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PipelinesRoute = PipelinesRouteImport.update({
   id: '/pipelines',
   path: '/pipelines',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LineageRoute = LineageRouteImport.update({
+  id: '/lineage',
+  path: '/lineage',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LandingRoute = LandingRouteImport.update({
@@ -49,6 +75,16 @@ const IncidentsRoute = IncidentsRouteImport.update({
 const FreshnessRoute = FreshnessRouteImport.update({
   id: '/freshness',
   path: '/freshness',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataMeshRoute = DataMeshRouteImport.update({
+  id: '/data-mesh',
+  path: '/data-mesh',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CostAnalyticsRoute = CostAnalyticsRouteImport.update({
+  id: '/cost-analytics',
+  path: '/cost-analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMonitoringRoute = ApiMonitoringRouteImport.update({
@@ -81,12 +117,18 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/api-monitoring': typeof ApiMonitoringRoute
+  '/cost-analytics': typeof CostAnalyticsRoute
+  '/data-mesh': typeof DataMeshRoute
   '/freshness': typeof FreshnessRoute
   '/incidents': typeof IncidentsRoute
   '/landing': typeof LandingRoute
+  '/lineage': typeof LineageRoute
   '/pipelines': typeof PipelinesRouteWithChildren
+  '/query-performance': typeof QueryPerformanceRoute
+  '/schema-registry': typeof SchemaRegistryRoute
   '/search': typeof SearchRoute
   '/segmentation': typeof SegmentationRoute
+  '/streaming': typeof StreamingRoute
   '/pipelines/$pipelineId': typeof PipelinesPipelineIdRoute
   '/pipelines/': typeof PipelinesIndexRoute
 }
@@ -94,11 +136,17 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/api-monitoring': typeof ApiMonitoringRoute
+  '/cost-analytics': typeof CostAnalyticsRoute
+  '/data-mesh': typeof DataMeshRoute
   '/freshness': typeof FreshnessRoute
   '/incidents': typeof IncidentsRoute
   '/landing': typeof LandingRoute
+  '/lineage': typeof LineageRoute
+  '/query-performance': typeof QueryPerformanceRoute
+  '/schema-registry': typeof SchemaRegistryRoute
   '/search': typeof SearchRoute
   '/segmentation': typeof SegmentationRoute
+  '/streaming': typeof StreamingRoute
   '/pipelines/$pipelineId': typeof PipelinesPipelineIdRoute
   '/pipelines': typeof PipelinesIndexRoute
 }
@@ -107,12 +155,18 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/api-monitoring': typeof ApiMonitoringRoute
+  '/cost-analytics': typeof CostAnalyticsRoute
+  '/data-mesh': typeof DataMeshRoute
   '/freshness': typeof FreshnessRoute
   '/incidents': typeof IncidentsRoute
   '/landing': typeof LandingRoute
+  '/lineage': typeof LineageRoute
   '/pipelines': typeof PipelinesRouteWithChildren
+  '/query-performance': typeof QueryPerformanceRoute
+  '/schema-registry': typeof SchemaRegistryRoute
   '/search': typeof SearchRoute
   '/segmentation': typeof SegmentationRoute
+  '/streaming': typeof StreamingRoute
   '/pipelines/$pipelineId': typeof PipelinesPipelineIdRoute
   '/pipelines/': typeof PipelinesIndexRoute
 }
@@ -122,12 +176,18 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/api-monitoring'
+    | '/cost-analytics'
+    | '/data-mesh'
     | '/freshness'
     | '/incidents'
     | '/landing'
+    | '/lineage'
     | '/pipelines'
+    | '/query-performance'
+    | '/schema-registry'
     | '/search'
     | '/segmentation'
+    | '/streaming'
     | '/pipelines/$pipelineId'
     | '/pipelines/'
   fileRoutesByTo: FileRoutesByTo
@@ -135,11 +195,17 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/api-monitoring'
+    | '/cost-analytics'
+    | '/data-mesh'
     | '/freshness'
     | '/incidents'
     | '/landing'
+    | '/lineage'
+    | '/query-performance'
+    | '/schema-registry'
     | '/search'
     | '/segmentation'
+    | '/streaming'
     | '/pipelines/$pipelineId'
     | '/pipelines'
   id:
@@ -147,12 +213,18 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/api-monitoring'
+    | '/cost-analytics'
+    | '/data-mesh'
     | '/freshness'
     | '/incidents'
     | '/landing'
+    | '/lineage'
     | '/pipelines'
+    | '/query-performance'
+    | '/schema-registry'
     | '/search'
     | '/segmentation'
+    | '/streaming'
     | '/pipelines/$pipelineId'
     | '/pipelines/'
   fileRoutesById: FileRoutesById
@@ -161,16 +233,29 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   ApiMonitoringRoute: typeof ApiMonitoringRoute
+  CostAnalyticsRoute: typeof CostAnalyticsRoute
+  DataMeshRoute: typeof DataMeshRoute
   FreshnessRoute: typeof FreshnessRoute
   IncidentsRoute: typeof IncidentsRoute
   LandingRoute: typeof LandingRoute
+  LineageRoute: typeof LineageRoute
   PipelinesRoute: typeof PipelinesRouteWithChildren
+  QueryPerformanceRoute: typeof QueryPerformanceRoute
+  SchemaRegistryRoute: typeof SchemaRegistryRoute
   SearchRoute: typeof SearchRoute
   SegmentationRoute: typeof SegmentationRoute
+  StreamingRoute: typeof StreamingRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/streaming': {
+      id: '/streaming'
+      path: '/streaming'
+      fullPath: '/streaming'
+      preLoaderRoute: typeof StreamingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/segmentation': {
       id: '/segmentation'
       path: '/segmentation'
@@ -185,11 +270,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/schema-registry': {
+      id: '/schema-registry'
+      path: '/schema-registry'
+      fullPath: '/schema-registry'
+      preLoaderRoute: typeof SchemaRegistryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/query-performance': {
+      id: '/query-performance'
+      path: '/query-performance'
+      fullPath: '/query-performance'
+      preLoaderRoute: typeof QueryPerformanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pipelines': {
       id: '/pipelines'
       path: '/pipelines'
       fullPath: '/pipelines'
       preLoaderRoute: typeof PipelinesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lineage': {
+      id: '/lineage'
+      path: '/lineage'
+      fullPath: '/lineage'
+      preLoaderRoute: typeof LineageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/landing': {
@@ -211,6 +317,20 @@ declare module '@tanstack/react-router' {
       path: '/freshness'
       fullPath: '/freshness'
       preLoaderRoute: typeof FreshnessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data-mesh': {
+      id: '/data-mesh'
+      path: '/data-mesh'
+      fullPath: '/data-mesh'
+      preLoaderRoute: typeof DataMeshRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cost-analytics': {
+      id: '/cost-analytics'
+      path: '/cost-analytics'
+      fullPath: '/cost-analytics'
+      preLoaderRoute: typeof CostAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api-monitoring': {
@@ -269,12 +389,18 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   ApiMonitoringRoute: ApiMonitoringRoute,
+  CostAnalyticsRoute: CostAnalyticsRoute,
+  DataMeshRoute: DataMeshRoute,
   FreshnessRoute: FreshnessRoute,
   IncidentsRoute: IncidentsRoute,
   LandingRoute: LandingRoute,
+  LineageRoute: LineageRoute,
   PipelinesRoute: PipelinesRouteWithChildren,
+  QueryPerformanceRoute: QueryPerformanceRoute,
+  SchemaRegistryRoute: SchemaRegistryRoute,
   SearchRoute: SearchRoute,
   SegmentationRoute: SegmentationRoute,
+  StreamingRoute: StreamingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -15,7 +15,13 @@ import {
   Star,
   TrendingUp,
   Monitor,
-  Moon
+  Moon,
+  Share2,
+  DollarSign,
+  Zap,
+  FileJson,
+  Server,
+  Building2
 } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import { PublicLayout } from '@/components/layout/PublicLayout';
@@ -140,11 +146,87 @@ export function AboutPage() {
             </div>
           </section>
 
+          {/* Data Engineering Features */}
+          <section className="mb-12">
+            <h2 className="mb-6 flex items-center gap-3 text-2xl font-bold text-foreground">
+              <Database className="h-7 w-7 text-indigo-600" />
+              Data Engineering Features
+            </h2>
+            
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
+                  <Share2 className="h-5 w-5 text-blue-600" />
+                  Data Lineage
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Visual DAG showing data flow from streams through pipelines to datasets and consumers. 
+                  Impact analysis with blast radius calculation for understanding downstream dependencies.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                  Cost Analytics
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Infrastructure cost tracking by category (compute, storage, network, licensing). 
+                  Budget monitoring with alerts and team-level cost attribution.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
+                  <Zap className="h-5 w-5 text-yellow-600" />
+                  Query Performance
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Monitor query execution metrics, identify slow queries, and receive optimization suggestions. 
+                  Schema statistics and caching analysis with cost estimation.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
+                  <FileJson className="h-5 w-5 text-purple-600" />
+                  Schema Registry
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Track schema evolution with version history, compatibility checking (backward/forward/full), 
+                  and breaking change detection across Avro, Protobuf, and JSON schemas.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
+                  <Server className="h-5 w-5 text-cyan-600" />
+                  Streaming Metrics
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Real-time monitoring of Kafka/Kinesis streams with consumer lag tracking, 
+                  throughput metrics, partition health, and replication status.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card p-6">
+                <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
+                  <Building2 className="h-5 w-5 text-orange-600" />
+                  Data Mesh
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Domain-oriented data ownership visualization with data product catalog, SLAs, 
+                  and federated governance across multiple teams and domains.
+                </p>
+              </div>
+            </div>
+          </section>
+
           {/* New Features */}
           <section className="mb-12">
             <h2 className="mb-6 flex items-center gap-3 text-2xl font-bold text-foreground">
               <Star className="h-7 w-7 text-yellow-500" />
-              New Features
+              Platform Features
             </h2>
             
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

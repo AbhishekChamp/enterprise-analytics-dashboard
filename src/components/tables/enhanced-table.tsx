@@ -68,7 +68,6 @@ interface TableProps<T = any> {
     onSort?: (sort: SortState) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function EnhancedTable<T extends object>({
     data,
     columns: initialColumns,
@@ -95,24 +94,27 @@ export function EnhancedTable<T extends object>({
     const [filters, setFilters] = useState<Record<string, string>>({});
 
     // Handle sorting
-    const handleSort = useCallback((key: string) => {
-        setSort((prev) => {
-            let newSort: SortState;
-            if (prev.key === key) {
-                if (prev.direction === "asc") {
-                    newSort = { key, direction: "desc" };
-                } else if (prev.direction === "desc") {
-                    newSort = { key: null, direction: null };
+    const handleSort = useCallback(
+        (key: string) => {
+            setSort((prev) => {
+                let newSort: SortState;
+                if (prev.key === key) {
+                    if (prev.direction === "asc") {
+                        newSort = { key, direction: "desc" };
+                    } else if (prev.direction === "desc") {
+                        newSort = { key: null, direction: null };
+                    } else {
+                        newSort = { key, direction: "asc" };
+                    }
                 } else {
                     newSort = { key, direction: "asc" };
                 }
-            } else {
-                newSort = { key, direction: "asc" };
-            }
-            onSort?.(newSort);
-            return newSort;
-        });
-    }, [onSort]);
+                onSort?.(newSort);
+                return newSort;
+            });
+        },
+        [onSort],
+    );
 
     // Handle filtering
     const handleFilterChange = useCallback((key: string, value: string) => {
@@ -127,8 +129,8 @@ export function EnhancedTable<T extends object>({
     const toggleColumnVisibility = useCallback((index: number) => {
         setColumns((prev) =>
             prev.map((col, i) =>
-                i === index ? { ...col, hidden: !col.hidden } : col
-            )
+                i === index ? { ...col, hidden: !col.hidden } : col,
+            ),
         );
     }, []);
 
@@ -141,7 +143,8 @@ export function EnhancedTable<T extends object>({
             if (value) {
                 result = result.filter((item) => {
                     const itemValue = (item as Record<string, unknown>)[key];
-                    if (itemValue === null || itemValue === undefined) return false;
+                    if (itemValue === null || itemValue === undefined)
+                        return false;
                     return String(itemValue)
                         .toLowerCase()
                         .includes(value.toLowerCase());
@@ -154,19 +157,22 @@ export function EnhancedTable<T extends object>({
             result.sort((a, b) => {
                 const aValue = (a as Record<string, unknown>)[sort.key!];
                 const bValue = (b as Record<string, unknown>)[sort.key!];
-                
+
                 if (aValue === null || aValue === undefined) return 1;
                 if (bValue === null || bValue === undefined) return -1;
-                
+
                 let comparison = 0;
                 if (typeof aValue === "number" && typeof bValue === "number") {
                     comparison = aValue - bValue;
-                } else if (typeof aValue === "string" && typeof bValue === "string") {
+                } else if (
+                    typeof aValue === "string" &&
+                    typeof bValue === "string"
+                ) {
                     comparison = aValue.localeCompare(bValue);
                 } else {
                     comparison = String(aValue).localeCompare(String(bValue));
                 }
-                
+
                 return sort.direction === "asc" ? comparison : -comparison;
             });
         }
@@ -222,7 +228,7 @@ export function EnhancedTable<T extends object>({
                 onSelectionChange([...selectedIds, id]);
             }
         },
-        [selectedIds, onSelectionChange]
+        [selectedIds, onSelectionChange],
     );
 
     const paginatedData = useMemo(() => {
@@ -238,9 +244,9 @@ export function EnhancedTable<T extends object>({
     const renderTableBody = () => {
         if (isVirtualScroll && processedData.length > pageSize) {
             return (
-                <div className="max-h-100 overflow-y-auto">
-                    <table className="w-full text-sm">
-                        <tbody className="divide-y divide-border">
+                <div className='max-h-100 overflow-y-auto'>
+                    <table className='w-full text-sm'>
+                        <tbody className='divide-y divide-border'>
                             {processedData.map((item) => (
                                 <tr
                                     key={getRowId(item)}
@@ -251,7 +257,7 @@ export function EnhancedTable<T extends object>({
                                     onClick={() => onRowClick?.(item)}
                                 >
                                     {enableSelection && (
-                                        <td className="px-4 py-3 w-10">
+                                        <td className='px-4 py-3 w-10'>
                                             <Checkbox
                                                 checked={selectedIds.includes(
                                                     getRowId(item),
@@ -270,7 +276,7 @@ export function EnhancedTable<T extends object>({
                                     {visibleColumns.map((column, colIndex) => (
                                         <td
                                             key={colIndex}
-                                            className="px-4 py-3"
+                                            className='px-4 py-3'
                                         >
                                             {column.render
                                                 ? column.render(
@@ -302,7 +308,7 @@ export function EnhancedTable<T extends object>({
         }
 
         return (
-            <tbody className="divide-y divide-border">
+            <tbody className='divide-y divide-border'>
                 {paginatedData.map((item) => (
                     <tr
                         key={getRowId(item)}
@@ -315,7 +321,7 @@ export function EnhancedTable<T extends object>({
                         onClick={() => onRowClick?.(item)}
                     >
                         {enableSelection && (
-                            <td className="px-4 py-3 w-10">
+                            <td className='px-4 py-3 w-10'>
                                 <Checkbox
                                     checked={selectedIds.includes(
                                         getRowId(item),
@@ -328,7 +334,7 @@ export function EnhancedTable<T extends object>({
                             </td>
                         )}
                         {visibleColumns.map((column, colIndex) => (
-                            <td key={colIndex} className="px-4 py-3">
+                            <td key={colIndex} className='px-4 py-3'>
                                 {column.render
                                     ? column.render(
                                           (item as Record<string, unknown>)[
@@ -351,71 +357,92 @@ export function EnhancedTable<T extends object>({
 
     const renderSortIcon = (column: TableColumn<T>) => {
         if (!enableSorting || column.sortable === false) return null;
-        
+
         if (sort.key !== column.key) {
             return (
-                <ChevronUp className="ml-1 h-3 w-3 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ChevronUp className='ml-1 h-3 w-3 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity' />
             );
         }
-        
+
         return sort.direction === "asc" ? (
-            <ChevronUp className="ml-1 h-3 w-3 text-primary" />
+            <ChevronUp className='ml-1 h-3 w-3 text-primary' />
         ) : (
-            <ChevronDown className="ml-1 h-3 w-3 text-primary" />
+            <ChevronDown className='ml-1 h-3 w-3 text-primary' />
         );
     };
 
     return (
         <div className={cn("space-y-4", className)}>
             {/* Toolbar */}
-            <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
+            <div className='flex items-center justify-between flex-wrap gap-2'>
+                <div className='flex items-center gap-2'>
                     {/* Export Buttons - Individual */}
                     {enableExport && (
-                        <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-2">
-                            <FileSpreadsheet className="h-4 w-4" />
+                        <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={handleExportCSV}
+                            className='gap-2'
+                        >
+                            <FileSpreadsheet className='h-4 w-4' />
                             Export CSV
                         </Button>
                     )}
                     {enableExport && (
-                        <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-2">
-                            <FileText className="h-4 w-4" />
+                        <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={handleExportPDF}
+                            className='gap-2'
+                        >
+                            <FileText className='h-4 w-4' />
                             Export PDF
                         </Button>
                     )}
                     {enableJSONExport && (
-                        <Button variant="outline" size="sm" onClick={handleExportJSON} className="gap-2">
-                            <FileJson className="h-4 w-4" />
+                        <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={handleExportJSON}
+                            className='gap-2'
+                        >
+                            <FileJson className='h-4 w-4' />
                             Export JSON
                         </Button>
                     )}
                     {enableSelection && (
-                        <span className="text-sm text-muted-foreground">
+                        <span className='text-sm text-muted-foreground'>
                             {selectedIds.length} selected
                         </span>
                     )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className='flex items-center gap-2'>
                     {enableColumnVisibility && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="gap-2">
-                                    <Settings2 className="h-4 w-4" />
+                                <Button
+                                    variant='outline'
+                                    size='sm'
+                                    className='gap-2'
+                                >
+                                    <Settings2 className='h-4 w-4' />
                                     Columns
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuContent align='end' className='w-48'>
                                 {columns.map((column, index) => (
                                     <DropdownMenuItem
                                         key={index}
-                                        onClick={() => toggleColumnVisibility(index)}
-                                        className="flex items-center justify-between"
+                                        onClick={() =>
+                                            toggleColumnVisibility(index)
+                                        }
+                                        className='flex items-center justify-between'
                                     >
                                         <span>{column.header}</span>
                                         {!column.hidden ? (
-                                            <Eye className="h-4 w-4 text-primary" />
+                                            <Eye className='h-4 w-4 text-primary' />
                                         ) : (
-                                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                            <EyeOff className='h-4 w-4 text-muted-foreground' />
                                         )}
                                     </DropdownMenuItem>
                                 ))}
@@ -424,19 +451,19 @@ export function EnhancedTable<T extends object>({
                     )}
                     {processedData.length > pageSize && (
                         <Button
-                            variant="ghost"
-                            size="sm"
+                            variant='ghost'
+                            size='sm'
                             onClick={() => setIsVirtualScroll(!isVirtualScroll)}
-                            className="gap-2"
+                            className='gap-2'
                         >
                             {isVirtualScroll ? (
                                 <>
-                                    <List className="h-4 w-4" />
+                                    <List className='h-4 w-4' />
                                     Paginated
                                 </>
                             ) : (
                                 <>
-                                    <Grid3X3 className="h-4 w-4" />
+                                    <Grid3X3 className='h-4 w-4' />
                                     Virtual Scroll
                                 </>
                             )}
@@ -447,35 +474,51 @@ export function EnhancedTable<T extends object>({
 
             {/* Column Filters */}
             {columns.some((col) => col.filterable) && (
-                <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg">
+                <div className='flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg'>
                     {columns
                         .filter((col) => col.filterable && !col.hidden)
                         .map((column, index) => (
-                            <div key={index} className="flex-1 min-w-[150px]">
-                                {column.filterType === "select" && column.filterOptions ? (
+                            <div key={index} className='flex-1 min-w-37.5'>
+                                {column.filterType === "select" &&
+                                column.filterOptions ? (
                                     <select
-                                        value={filters[column.key as string] || ""}
-                                        onChange={(e) =>
-                                            handleFilterChange(column.key as string, e.target.value)
+                                        value={
+                                            filters[column.key as string] || ""
                                         }
-                                        className="w-full px-3 py-1.5 text-sm border rounded-md bg-background"
+                                        onChange={(e) =>
+                                            handleFilterChange(
+                                                column.key as string,
+                                                e.target.value,
+                                            )
+                                        }
+                                        className='w-full px-3 py-1.5 text-sm border rounded-md bg-background'
                                     >
-                                        <option value="">All {column.header}</option>
+                                        <option value=''>
+                                            All {column.header}
+                                        </option>
                                         {column.filterOptions.map((option) => (
-                                            <option key={option.value} value={option.value}>
+                                            <option
+                                                key={option.value}
+                                                value={option.value}
+                                            >
                                                 {option.label}
                                             </option>
                                         ))}
                                     </select>
                                 ) : (
                                     <input
-                                        type="text"
+                                        type='text'
                                         placeholder={`Filter ${column.header.toLowerCase()}...`}
-                                        value={filters[column.key as string] || ""}
-                                        onChange={(e) =>
-                                            handleFilterChange(column.key as string, e.target.value)
+                                        value={
+                                            filters[column.key as string] || ""
                                         }
-                                        className="w-full px-3 py-1.5 text-sm border rounded-md bg-background"
+                                        onChange={(e) =>
+                                            handleFilterChange(
+                                                column.key as string,
+                                                e.target.value,
+                                            )
+                                        }
+                                        className='w-full px-3 py-1.5 text-sm border rounded-md bg-background'
                                     />
                                 )}
                             </div>
@@ -484,12 +527,12 @@ export function EnhancedTable<T extends object>({
             )}
 
             {/* Table */}
-            <div className="overflow-x-auto rounded-md border">
-                <table className="w-full text-sm">
-                    <thead className="border-b border-border bg-muted/50">
+            <div className='overflow-x-auto rounded-md border'>
+                <table className='w-full text-sm'>
+                    <thead className='border-b border-border bg-muted/50'>
                         <tr>
                             {enableSelection && (
-                                <th className="px-4 py-3 w-10">
+                                <th className='px-4 py-3 w-10'>
                                     <Checkbox
                                         checked={
                                             processedData.length > 0 &&
@@ -508,11 +551,17 @@ export function EnhancedTable<T extends object>({
                                     key={index}
                                     className={cn(
                                         "px-4 py-3 text-left font-medium text-muted-foreground",
-                                        enableSorting && column.sortable !== false && "cursor-pointer hover:text-foreground group"
+                                        enableSorting &&
+                                            column.sortable !== false &&
+                                            "cursor-pointer hover:text-foreground group",
                                     )}
-                                    onClick={() => enableSorting && column.sortable !== false && handleSort(column.key as string)}
+                                    onClick={() =>
+                                        enableSorting &&
+                                        column.sortable !== false &&
+                                        handleSort(column.key as string)
+                                    }
                                 >
-                                    <div className="flex items-center">
+                                    <div className='flex items-center'>
                                         {column.header}
                                         {renderSortIcon(column)}
                                     </div>
@@ -523,35 +572,38 @@ export function EnhancedTable<T extends object>({
                     {!isVirtualScroll && renderTableBody()}
                 </table>
                 {isVirtualScroll && (
-                    <div className="border-t">{renderTableBody()}</div>
+                    <div className='border-t'>{renderTableBody()}</div>
                 )}
             </div>
 
             {/* Pagination */}
             {enablePagination && totalPages > 1 && (
-                <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
+                <div className='flex items-center justify-between'>
+                    <p className='text-sm text-muted-foreground'>
                         Showing {currentPage * pageSize + 1} to{" "}
-                        {Math.min((currentPage + 1) * pageSize, processedData.length)} of{" "}
-                        {processedData.length} entries
+                        {Math.min(
+                            (currentPage + 1) * pageSize,
+                            processedData.length,
+                        )}{" "}
+                        of {processedData.length} entries
                     </p>
-                    <div className="flex items-center gap-2">
+                    <div className='flex items-center gap-2'>
                         <Button
-                            variant="outline"
-                            size="sm"
+                            variant='outline'
+                            size='sm'
                             onClick={() =>
                                 setCurrentPage((p) => Math.max(0, p - 1))
                             }
                             disabled={currentPage === 0}
                         >
-                            <ChevronLeft className="h-4 w-4" />
+                            <ChevronLeft className='h-4 w-4' />
                         </Button>
-                        <span className="text-sm">
+                        <span className='text-sm'>
                             Page {currentPage + 1} of {totalPages}
                         </span>
                         <Button
-                            variant="outline"
-                            size="sm"
+                            variant='outline'
+                            size='sm'
                             onClick={() =>
                                 setCurrentPage((p) =>
                                     Math.min(totalPages - 1, p + 1),
@@ -559,7 +611,7 @@ export function EnhancedTable<T extends object>({
                             }
                             disabled={currentPage === totalPages - 1}
                         >
-                            <ChevronRight className="h-4 w-4" />
+                            <ChevronRight className='h-4 w-4' />
                         </Button>
                     </div>
                 </div>

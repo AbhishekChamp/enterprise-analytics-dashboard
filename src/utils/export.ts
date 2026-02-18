@@ -1,10 +1,12 @@
+import toast from 'react-hot-toast';
+
 export const exportToCSV = <T extends object>(
   data: T[],
   columns: { key: keyof T; header: string }[],
   filename: string
 ): void => {
   if (!data.length) {
-    console.warn('No data to export');
+    toast('No data to export', { icon: '⚠️' });
     return;
   }
 
@@ -47,7 +49,7 @@ export const exportToJSON = <T extends object>(
   filename: string
 ): void => {
   if (!data.length) {
-    console.warn('No data to export');
+    toast('No data to export', { icon: '⚠️' });
     return;
   }
 

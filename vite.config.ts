@@ -30,10 +30,18 @@ export default defineConfig({
           'state': ['zustand'],
           'date': ['date-fns'],
         },
+        // Ensure consistent chunk naming for better caching
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]',
       },
     },
     chunkSizeWarningLimit: 500,
     sourcemap: false,
+    // Enable CSS code splitting
+    cssCodeSplit: true,
+    // Report bundle size
+    reportCompressedSize: true,
   },
   optimizeDeps: {
     include: [
@@ -46,5 +54,16 @@ export default defineConfig({
       'zustand',
       'date-fns',
     ],
+  },
+  // Performance optimizations for Netlify
+  server: {
+    headers: {
+      'Cache-Control': 'no-cache',
+    },
+  },
+  preview: {
+    headers: {
+      'Cache-Control': 'no-cache',
+    },
   },
 })
